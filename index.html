@@ -230,11 +230,20 @@ let AD_LINKS=["https://omg10.com/4/11270726","https://omg10.com/4/11273647","htt
 const DB_URL="https://fram-and-go-default-rtdb.asia-southeast1.firebasedatabase.app";
 let db=null;try{if(window.firebase){firebase.initializeApp({databaseURL:DB_URL});db=firebase.database()}}catch(e){}
 function fbPush(path,data){try{db&&db.ref(path).push(data).catch(()=>{})}catch(e){}}
+/* viewers: device id + ban gate + geo visit log (30min throttle) */
+let _uid='u0';
+try{_uid=localStorage.getItem('ctv_uid')||'';if(!_uid){_uid='u'+Date.now().toString(36)+Math.random().toString(36).slice(2,9);localStorage.setItem('ctv_uid',_uid)}}catch(e){_uid='u'+Math.random().toString(36).slice(2,9)}
+function showBanned(){const m=document.getElementById('mnt');if(m){m.style.display='grid';m.innerHTML='<div style="max-width:440px"><div style="font-size:64px">X</div><h1 style="font-size:24px;margin:14px 0 8px">Access blocked</h1><p style="color:#aaa;font-size:14px">Device blocked by admin.</p></div>'}try{document.title='Blocked'}catch(e){}}
+function bumpVisit(g){return function(v){v=v||{};return{c:(g&&g.country_name)||v.c||'',cc:(g&&g.country_code)||v.cc||'',city:(g&&g.city)||v.city||'',last:Date.now(),views:(v.views||0)+1}}}
+function logVisit(g){if(!db)return;try{db.ref('cholchetv/visitors/'+_uid).transaction(bumpVisit(g)).catch(()=>{})}catch(e){}}
+function checkBan(){if(!db)return;try{db.ref('cholchetv/banned/'+_uid).once('value').then(s=>{if(s.val())showBanned()}).catch(()=>{})}catch(e){}}
+function maybeVisit(){if(!db)return;let t=0;try{t=+localStorage.getItem('ctv_vt')||0}catch(e){}if(Date.now()-t<1800000)return;try{localStorage.setItem('ctv_vt',String(Date.now()))}catch(e){}let gc=null;try{gc=JSON.parse(localStorage.getItem('ctv_geo')||'null')}catch(e){}if(gc&&gc.country_name){logVisit(gc);return}try{fetch('https://ipapi.co/json/').then(r=>r.json()).then(g=>{try{localStorage.setItem('ctv_geo',JSON.stringify(g))}catch(e){}logVisit(g)}).catch(()=>logVisit(null))}catch(e){logVisit(null)}}
+checkBan();maybeVisit();
 /* admin Settings -> ads + maintenance switches (REALTIME: refresh ছাড়াই live apply) */
 function showMaint(){const m=document.getElementById('mnt');if(m)m.style.display='grid';try{document.title='Maintenance — Cholche TV'}catch(e){}}
 function hideMaint(){const m=document.getElementById('mnt');if(m)m.style.display='none'}
-let ADS_ON=true,lastAdsOn=true;
-function applySettings(v){v=v||{};ADS_ON=v.adsEnabled!==false;const st=document.getElementById('pvStrip');if(st)st.style.display=ADS_ON?'flex':'none';if(ADS_ON!==lastAdsOn){lastAdsOn=ADS_ON;try{applyFilter()}catch(e){}}if(v.maintenance===true)showMaint();else hideMaint()}
+let ADS_ON=true,lastAdsOn=true,FEATURED=[],ANNOUNCE='',lastFeat='[]',lastAnn=null;
+function applySettings(v){v=v||{};ADS_ON=v.adsEnabled!==false;const st=document.getElementById('pvStrip');if(st)st.style.display=ADS_ON?'flex':'none';FEATURED=v.featured||[];ANNOUNCE=v.announce||'';const fk=JSON.stringify(FEATURED);let red=false;if(ADS_ON!==lastAdsOn){lastAdsOn=ADS_ON;red=true}if(fk!==lastFeat||ANNOUNCE!==lastAnn){lastFeat=fk;lastAnn=ANNOUNCE;red=true}if(red){try{applyFilter()}catch(e){}}if(v.maintenance===true)showMaint();else hideMaint()}
 try{if(db)db.ref('cholchetv/settings').on('value',s=>{try{applySettings(s.val())}catch(e){}})}catch(e){}
 /* SDK flaky হলে REST fallback: 30s poll + tab focus-এ check (maintenance live থাকে) */
 function pollSettings(){try{fetch(DB_URL+'/cholchetv/settings.json').then(r=>r.json()).then(v=>{try{applySettings(v)}catch(e){}}).catch(()=>{})}catch(e){}}
@@ -300,7 +309,11 @@ function render(){
 /* HOME = শুধু channel grid */
 const list=filtered.slice(0,shown);
 const cards=list.map(vcard);if(ADS_ON)for(let k=11;k<cards.length;k+=13){cards.splice(k,0,adCard())}
-let h=`<div class="shelf"><h2><svg width="20" height="20" viewBox="0 0 24 24" fill="#f03"><path d="M8 5v14l11-7z"/></svg> All Channels <small>${filtered.length} channels</small></h2><div class="vgrid">${cards.join('')}</div></div>`;
+let h='';
+if(ANNOUNCE)h+=`<div style="display:flex;gap:10px;align-items:center;background:linear-gradient(90deg,#3a2a00,#0f0f0f);border:1px solid #fabb0055;border-radius:12px;padding:11px 16px;margin:2px 0 10px;font-size:13.5px">📢<b style="flex:1">${ANNOUNCE.replace(/</g,'&lt;')}</b></div>`;
+const feat=(FEATURED||[]).map(n=>all.find(c=>(c.name||'').toLowerCase()===String(n).toLowerCase())).filter(Boolean).slice(0,12);
+if(feat.length&&!document.getElementById('q').value)h+=`<div class="shelf"><h2>⭐ Featured <small>${feat.length} channels</small></h2><div class="vgrid">${feat.map(vcard).join('')}</div></div>`;
+h+=`<div class="shelf"><h2><svg width="20" height="20" viewBox="0 0 24 24" fill="#f03"><path d="M8 5v14l11-7z"/></svg> All Channels <small>${filtered.length} channels</small></h2><div class="vgrid">${cards.join('')}</div></div>`;
 if(filtered.length>shown)h+=`<div style="text-align:center;padding:20px"><button class="subbtn" style="background:var(--bg3);color:#fff" onclick="shown+=60;render()">▼ Show more (${filtered.length-shown} left)</button></div>`;
 document.getElementById('homeSec').innerHTML=h||'<p style="color:var(--mut);padding:20px">No channels found.</p>'}
 /* ---------- popup ---------- */
