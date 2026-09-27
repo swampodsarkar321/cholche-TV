@@ -178,10 +178,12 @@ footer{color:var(--mut);font-size:12px;padding:24px;text-align:center}
 <div class="csearch"><div class="sbox"><input id="q" placeholder="Search channels"><button class="go" onclick="applyFilter()" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button></div><button class="mic" onclick="toast('🎤 Voice search coming soon')" aria-label="Voice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button></div>
 <div class="mright">
 <button class="icon-btn" onclick="fetchPlaylist()" title="Reload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg></button>
-<button class="icon-btn" onclick="toast('You will be notified of new channels')" title="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9ZM10 20a2.2 2.2 0 0 0 4 0"/></svg></button>
+<button class="icon-btn" id="bellBtn" onclick="toggleNotices(event)" title="Notifications" style="position:relative"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9ZM10 20a2.2 2.2 0 0 0 4 0"/></svg><span id="ntfBadge" style="display:none;position:absolute;top:2px;right:2px;background:#f03;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:99px;place-items:center;padding:0 4px"></span></button>
 <div class="avatar">C</div>
 </div>
 </header>
+
+<div id="notifDrop" style="display:none;position:fixed;top:62px;right:16px;width:min(360px,92vw);max-height:60vh;overflow:auto;background:#212121;border:1px solid var(--line);border-radius:14px;z-index:300;box-shadow:0 18px 50px #000a"><div style="padding:12px 16px;font-weight:700;border-bottom:1px solid var(--line)">🔔 Notifications</div><div id="notifList"></div></div>
 
 <div class="body">
 <!-- SIDEBAR -->
@@ -247,6 +249,14 @@ try{if(db)db.ref('cholchetv/settings').on('value',s=>{try{applySettings(s.val())
 /* SDK flaky হলে REST fallback: 30s poll + tab focus-এ check (maintenance live থাকে) */
 function pollSettings(){try{fetch(DB_URL+'/cholchetv/settings.json').then(r=>r.json()).then(v=>{try{applySettings(v)}catch(e){}}).catch(()=>{})}catch(e){}}
 pollSettings();setInterval(pollSettings,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)pollSettings()});
+/* 🔔 site notifications (admin পাঠায়) — REST poll, read-tracking সহ */
+let NOTICES=[];
+function toggleNotices(e){if(e)e.stopPropagation();const d=document.getElementById('notifDrop');if(!d)return;const open=d.style.display!=='none';d.style.display=open?'none':'block';if(!open){try{localStorage.setItem('ctv_nt',String(Date.now()))}catch(x){}paintBadge()}}
+document.addEventListener('click',e=>{try{const d=document.getElementById('notifDrop');if(d&&d.style.display!=='none'&&!d.contains(e.target)&&!document.getElementById('bellBtn').contains(e.target))d.style.display='none'}catch(x){}});
+function paintBadge(){let last=0;try{last=+localStorage.getItem('ctv_nt')||0}catch(x){}const n=NOTICES.filter(x=>(x.t||0)>last).length;const b=document.getElementById('ntfBadge');if(!b)return;b.style.display=n?'grid':'none';b.textContent=n>9?'9+':n}
+function paintNotices(){const box=document.getElementById('notifList');if(!box)return;box.innerHTML=NOTICES.length?NOTICES.map(n=>{const link=n.link&&n.link.indexOf('http')===0?n.link:'';return`<div style="padding:12px 16px;border-bottom:1px solid #ffffff10;${link?'cursor:pointer':''}"${link?` onclick="window.open('${link}','_blank')"`:''}><b style="font-size:13.5px">${String(n.title||'').replace(/</g,'&lt;')}</b><div style="color:var(--mut);font-size:12.5px;margin-top:3px">${String(n.msg||'').replace(/</g,'&lt;')}</div><small style="color:#666">${n.t?new Date(n.t).toLocaleString():''}</small></div>`}).join(''):'<div style="padding:22px;text-align:center;color:var(--mut);font-size:13px">No notifications yet</div>';paintBadge()}
+function pollNotices(){try{fetch(DB_URL+'/cholchetv/notices.json').then(r=>r.json()).then(v=>{const a=v?(Array.isArray(v)?v:Object.values(v)):[];a.sort((x,y)=>(y.t||0)-(x.t||0));NOTICES=a.slice(0,15);paintNotices()}).catch(()=>{})}catch(e){}}
+pollNotices();setInterval(pollNotices,60000);
 /* admin panel (Ad Links tab) -> site ads auto-update */
 try{if(db)db.ref('cholchetv/adLinks').once('value').then(s=>{const raw=s.val();const a=raw?(Array.isArray(raw)?raw:Object.values(raw)):[];const u=a.map(x=>typeof x==='string'?x:(x&&x.url)).filter(x=>x&&x.indexOf('http')===0);if(u.length)AD_LINKS=u}).catch(()=>{})}catch(e){}
 let all=[],filtered=[],idx=0,activeCat="All",view="home",hls=null,srv=0,liked=new Set();
