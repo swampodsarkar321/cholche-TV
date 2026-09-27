@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin — Cholche TV</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f0f0f;--bg3:#272727;--line:#3d3d3d;--txt:#f1f1f1;--mut:#aaa;--red:#f03;--green:#4ade80;--blue:#60a5fa;--gold:#fabb00}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:Roboto,'Hind Siliguri',sans-serif;min-height:100vh}
+.mast{display:flex;align-items:center;gap:14px;padding:0 16px;height:60px;background:var(--bg);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50}
+.yt-logo{display:flex;align-items:center;gap:8px;font-weight:900;font-size:18px;cursor:pointer}
+.yt-logo img{width:34px;height:34px;border-radius:9px}
+.mast .tab{padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;color:var(--mut)}
+.mast .tab.on{background:var(--bg3);color:#fff}
+.mast .tab:hover{color:#fff}
+.wrap{max-width:1100px;margin:auto;padding:24px 20px 60px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}
+@media(max-width:700px){.cards{grid-template-columns:repeat(2,1fr)}}
+.card{background:var(--bg3);border-radius:12px;padding:18px}
+.card b{font-size:28px;display:block}.card span{color:var(--mut);font-size:12.5px}
+.sec{margin:22px 0}
+.sec h2{font-size:17px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;padding:10px 12px;color:var(--mut);font-weight:500;border-bottom:1px solid var(--line)}
+td{padding:10px 12px;border-bottom:1px solid #222}
+tr:hover td{background:#ffffff08}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700}
+.badge.red{background:#f033;color:#fff}.badge.green{background:#16a34a;color:#fff}.badge.blue{background:#1d4ed8;color:#fff}.badge.gold{background:#b45309;color:#fff}
+input,select{background:#181818;border:1px solid var(--line);color:#fff;padding:10px 14px;border-radius:8px;font-size:14px;font-family:inherit;outline:none}
+input:focus{border-color:var(--blue)}
+.btn{background:var(--bg3);border:1px solid var(--line);color:#fff;padding:10px 18px;border-radius:8px;font-size:13.5px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn:hover{background:#3d3d3d}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.danger{background:#7f1d1d;border-color:#991b1b}
+.btn.sm{padding:6px 12px;font-size:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.link{color:var(--blue);text-decoration:none;word-break:break-all;font-size:12.5px}
+.link:hover{textunderline}
+.empty{color:var(--mut);text-align:center;padding:30px;font-size:14px}
+#toast{position:fixed;bottom:26px;left:26px;background:#f1f1f1;color:#000;padding:13px 22px;border-radius:8px;font-size:14px;z-index:400;transform:translateY(80px);transition:.3s}
+#toast.show{transform:none}
+</style>
+</head>
+<body>
+<header class="mast">
+<div class="yt-logo" onclick="location.href='index.html'"><img src="logo.png" alt="">Cholche TV</div>
+<div style="width:1px;height:28px;background:var(--line)"></div>
+<div class="tab on" data-t="dash" onclick="tab('dash',this)">📊 Dashboard</div>
+<div class="tab" data-t="ads" onclick="tab('ads',this)">💰 Ad Links</div>
+<div class="tab" data-t="reports" onclick="tab('reports',this)">⚠ Reports</div>
+<div class="tab" data-t="stats" onclick="tab('stats',this)">📈 Stats</div>
+</header>
+<div class="wrap">
+<div id="view-dash"><div class="cards" id="statCards"></div><div class="sec"><h2>🕐 Recent activity</h2><div id="recent"></div></div></div>
+<div id="view-ads" style="display:none"><div class="sec"><h2>💰 Ad Links</h2>
+<div class="row" style="margin-bottom:14px"><input id="newAd" placeholder="https://…" style="flex:1;min-width:200px"><button class="btn pri" onclick="addAd()">+ Add</button></div>
+<div id="adList"></div></div></div>
+<div id="view-reports" style="display:none"><div class="sec"><h2>⚠ Channel Reports</h2><div id="repList"></div></div></div>
+<div id="view-stats" style="display:none"><div class="sec"><h2>📈 Most watched</h2><div id="watchList"></div></div></div>
+</div>
+<div id="toast"></div>
+<script>
+const DB_URL="https://fram-and-go-default-rtdb.asia-southeast1.firebasedatabase.app";
+firebase.initializeApp({databaseURL:DB_URL});
+const db=firebase.database();
+let toastT=null;const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)};
+function tab(t,el){document.querySelectorAll('.mast .tab').forEach(x=>x.classList.remove('on'));el.classList.add('on');['dash','ads','reports','stats'].forEach(v=>document.getElementById('view-'+v).style.display=v===t?'':'none');if(t==='ads')loadAds();if(t==='reports')loadReps();if(t==='stats')loadStats();if(t==='dash')loadDash()}
+/* dashboard */
+function loadDash(){db.ref('cholchetv/stats').once('value').then(s=>{const v=s.val()||{};document.getElementById('statCards').innerHTML=[['Total Views',v.views||0,''],['Unique Channels',v.channels||0,''],['Reports',v.reports||0,''],['Ad Clicks',v.adClicks||0,'']].map(([l,n])=>`<div class="card"><b>${n}</b><span>${l}</span></div>`).join('')}).catch(()=>{});db.ref('cholchetv/activity').limitToLast(10).once('value').then(s=>{const v=s.val()||{};const rows=Object.values(v).reverse();document.getElementById('recent').innerHTML=rows.length?`<table><tr><th>Time</th><th>Event</th><th>Channel</th></tr>${rows.map(r=>`<tr><td style="color:var(--mut)">${new Date(r.t).toLocaleString()}</td><td>${r.type}</td><td>${r.ch||'-'}</td></tr>`).join('')}</table>`:'<div class="empty">No activity yet</div>'}).catch(()=>{})}
+/* ads */
+function loadAds(){db.ref('cholchetv/adLinks').once('value').then(s=>{const v=s.val()||[];document.getElementById('adList').innerHTML=v.length?`<table><tr><th>#</th><th>Link</th><th>Clicks</th><th></th></tr>${v.map((a,i)=>`<tr><td>${i+1}</td><td><a class="link" href="${a.url}" target="_blank">${a.url.slice(0,60)}…</a></td><td>${a.clicks||0}</td><td><button class="btn sm danger" onclick="delAd(${i})">✕</button></td></tr>`).join('')}</table>`:'<div class="empty">No ad links yet</div>'}).catch(()=>{})}
+function addAd(){const u=document.getElementById('newAd').value.trim();if(!u||!u.startsWith('http')){toast('Valid URL দাও');return}db.ref('cholchetv/adLinks').push({url:u,clicks:0}).then(()=>{document.getElementById('newAd').value='';loadAds();toast('✅ Ad link added')}).catch(()=>toast('Failed'))}
+function delAd(i){db.ref('cholchetv/adLinks').once('value').then(s=>{const v=s.val()||[];const k=Object.keys(s.val()||{})[i];if(k)db.ref('cholchetv/adLinks/'+k).remove().then(()=>{loadAds();toast('Removed')})}).catch(()=>{})}
+/* reports */
+function loadReps(){db.ref('cholchetv/reports').once('value').then(s=>{const v=s.val()||{};const rows=Object.values(v);document.getElementById('repList').innerHTML=rows.length?`<table><tr><th>Time</th><th>Channel</th><th>Reason</th><th></th></tr>${rows.reverse().map((r,i)=>`<tr><td style="color:var(--mut)">${new Date(r.t).toLocaleString()}</td><td>${r.ch}</td><td><span class="badge gold">${r.reason}</span></td><td><button class="btn sm danger" onclick="resolveRep(${i})">✓</button></td></tr>`).join('')}</table>`:'<div class="empty">No reports — সব channel ঠিক আছে!</div>'}).catch(()=>{})}
+function resolveRep(i){db.ref('cholchetv/reports').once('value').then(s=>{const k=Object.keys(s.val()||{})[i];if(k)db.ref('cholchetv/reports/'+k).remove().then(()=>{loadReps();toast('Resolved ✓')})}).catch(()=>{})}
+/* stats */
+function loadStats(){db.ref('cholchetv/watchStats').once('value').then(s=>{const v=s.val()||{};const rows=Object.entries(v).sort((a,b)=>(b[1].count||0)-(a[1].count||0)).slice(0,30);document.getElementById('watchList').innerHTML=rows.length?`<table><tr><th>#</th><th>Channel</th><th>Views</th><th>Last</th></tr>${rows.map(([k,r],i)=>`<tr><td style="color:var(--mut)">${i+1}</td><td>${r.name||k}</td><td><span class="badge blue">${r.count||0}</span></td><td style="color:var(--mut)">${r.last?new Date(r.last).toLocaleString():'-'}</td></tr>`).join('')}</table>`:'<div class="empty">No watch data yet</div>'}).catch(()=>{})}
+loadDash();
+</script>
+</body></html>

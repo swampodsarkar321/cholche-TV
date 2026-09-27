@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Watch — Cholche TV</title>
+<link rel="icon" type="image/png" href="logo.png">
+<script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f0f0f;--bg3:#272727;--line:#3d3d3d;--txt:#f1f1f1;--mut:#aaa;--red:#f03}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:Roboto,'Hind Siliguri',sans-serif}
+.mast{display:flex;align-items:center;gap:14px;padding:0 16px;height:60px;position:sticky;top:0;background:var(--bg);z-index:50}
+.yt-logo{display:flex;align-items:center;gap:5px;font-weight:900;font-size:19px;letter-spacing:-1px;cursor:pointer}
+.yt-logo .rp{background:var(--red);border-radius:7px;width:32px;height:23px;display:grid;place-items:center;font-size:13px}
+.wrap{display:grid;grid-template-columns:1fr 360px;gap:22px;max-width:1600px;margin:auto;padding:10px 24px 60px}
+@media(max-width:1100px){.wrap{grid-template-columns:1fr}}
+.vbox{position:relative;background:#000;border-radius:14px;overflow:hidden}
+video{width:100%;aspect-ratio:16/9;display:block;background:#000}
+#spin{position:absolute;inset:0;display:none;place-items:center;background:rgba(0,0,0,.4)}
+#spin .ring{width:52px;height:52px;border-radius:99px;border:4px solid #ffffff2a;border-top-color:var(--red);animation:rot .8s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.vtitle{font-size:19px;font-weight:700;margin:12px 0 8px}
+.crow2{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.cava{width:42px;height:42px;border-radius:99px;background:#fff;display:grid;place-items:center;font-size:22px;overflow:hidden}
+.cava img{width:100%;height:100%;object-fit:contain;padding:5px}
+.subbtn{background:#fff;color:#000;border:0;font-weight:500;font-size:14px;padding:10px 18px;border-radius:99px;cursor:pointer;font-family:inherit;margin-left:10px}
+.subbtn.sub{background:var(--bg3);color:#fff}
+.actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.pill{background:var(--bg3);border:0;color:#fff;font-size:13.5px;font-weight:500;padding:10px 16px;border-radius:99px;cursor:pointer;display:flex;gap:7px;align-items:center;font-family:inherit}
+.pill:hover{background:#3d3d3d}
+.pill.on{background:#fff;color:#000}
+.pill.red{background:#c00;color:#fff}
+.desc{background:var(--bg3);border-radius:12px;padding:12px 14px;font-size:13.5px;margin-top:12px}
+.srvrow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.qrow{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap;color:var(--mut);font-size:13px}
+.qrow select{background:var(--bg3);color:#fff;border:1px solid var(--line);border-radius:8px;padding:8px;font-family:inherit}
+#list{display:flex;flex-direction:column;gap:10px}
+.urow{display:flex;gap:9px;cursor:pointer}
+.urow .th{position:relative;width:168px;flex-shrink:0;border-radius:10px;overflow:hidden;background:#1c1c1c;aspect-ratio:16/9;display:grid;place-items:center;font-size:28px}
+.urow .th img{width:100%;height:100%;object-fit:contain;background:#fff;padding:5px;position:absolute;inset:0}
+.urow .live{position:absolute;bottom:5px;right:5px;background:#c00;font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px}
+.urow b{font-size:13px;display:block}.urow small{color:var(--mut);font-size:12px}
+#toast{position:fixed;bottom:26px;left:26px;background:#f1f1f1;color:#000;padding:13px 22px;border-radius:8px;font-size:14px;z-index:400;transform:translateY(80px);transition:.3s}
+#toast.show{transform:none}
+#repBg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;place-items:center;z-index:300;padding:16px}
+#repBg .box{background:#212121;border:1px solid var(--line);border-radius:16px;padding:24px;width:min(420px,94vw)}
+#repBg label{display:flex;gap:10px;padding:9px 0;font-size:14px;cursor:pointer}
+/* ===== ADS (YouTube-style pre-roll + banner) ===== */
+#pvPre{position:absolute;inset:0;display:none;place-items:center;background:#000;z-index:15;text-align:center}
+#pvPre .pvtag{position:absolute;top:12px;left:12px;background:#fabb00;color:#000;font-size:11px;font-weight:700;padding:4px 10px;border-radius:5px}
+#pvPre .pvskip{position:absolute;bottom:14px;right:14px;background:#fff;color:#000;border:0;font-weight:500;font-size:13.5px;padding:10px 18px;border-radius:8px;cursor:pointer;font-family:inherit}
+#pvPre .pvskip:disabled{background:#555;color:#bbb;cursor:default}
+#pvPre .pvopen{background:linear-gradient(135deg,#f03,#7c3aed);border:0;color:#fff;font-size:16px;font-weight:700;padding:15px 40px;border-radius:99px;cursor:pointer;font-family:inherit;box-shadow:0 10px 40px #f035}
+.pvban{display:flex;gap:12px;align-items:center;background:linear-gradient(90deg,#1a1030,#0f2a3a);border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin-top:12px;cursor:pointer}
+.pvban:hover{border-color:#fabb0055}
+.pvban .spark{font-size:26px}
+.pvban b{font-size:14px;display:block}.pvban small{color:var(--mut);font-size:12px}
+.pvban .go{margin-left:auto;background:#fabb00;color:#000;font-weight:700;font-size:13px;padding:9px 20px;border-radius:99px;flex-shrink:0}
+</style>
+</head>
+<body>
+<header class="mast"><div class="yt-logo" onclick="location.href='index.html'"><img src="logo.png" alt="Cholche TV" style="width:38px;height:38px;border-radius:10px;object-fit:cover">Cholche TV</div>
+<div style="margin-left:auto;color:var(--mut);font-size:13px" id="cnt"></div></header>
+<div class="wrap">
+<div>
+<div class="vbox"><video id="v" controls playsinline preload="auto"></video><div id="spin"><div class="ring"></div></div>
+<div id="pvPre"><span class="pvtag">Advertisement</span>
+<div id="pvCreative" data-url="" onclick="pvGo(this)" style="position:absolute;inset:0;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;background:linear-gradient(135deg,#141428,#0f2a3a);text-align:center;padding:20px;cursor:pointer"><div style="font-size:54px">🎁</div><h2 style="font-size:20px">Sponsored Offer</h2><p style="color:#aaa;font-size:14px;margin:0">Special deal — click to explore</p><button class="pvopen" id="pvOpen" onclick="event.stopPropagation();pvGo(document.getElementById('pvCreative'))">Visit Sponsor →</button></div>
+<button class="pvskip" id="pvSkip" disabled>Skip in 5…</button></div>
+<div id="pvOver" style="position:absolute;left:12px;right:12px;bottom:54px;display:none;z-index:14;background:rgba(255,255,255,.97);color:#111;border-radius:10px;padding:10px 12px;align-items:center;gap:10px;font-size:13px;box-shadow:0 6px 24px #0008"><span style="background:#fabb00;font-size:10px;font-weight:700;padding:3px 7px;border-radius:4px">AD</span><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Special offer — click to explore</span><button onclick="window.open(randAd(),'_blank')" style="background:#065fd4;color:#fff;border:0;padding:8px 16px;border-radius:99px;font-weight:600;cursor:pointer;font-family:inherit">Visit site</button><button onclick="document.getElementById('pvOver').style.display='none'" aria-label="Close ad" style="background:none;border:0;font-size:16px;cursor:pointer;color:#111">✕</button></div>
+<div id="deadBox" style="position:absolute;inset:0;display:none;place-items:center;background:#111;z-index:12;text-align:center;padding:20px"><div><div style="font-size:44px">📡</div><h3 style="margin:8px 0">এই channel এখন offline</h3><p style="color:var(--mut);font-size:13px;margin:0 0 14px">সব server fail করেছে — অন্য channel try করো</p><button class="pill" onclick="location.href='index.html'" style="margin:auto">← All Channels</button></div></div>
+</div>
+<div class="pvban" id="pvBan"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fabb00" stroke-width="2" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4"/><path d="M5 12v8h14v-8M12 8v12M12 8S7 8 5.5 6.5 7 3 9 4.5 12 8 12 8Zm0 0s5 0 6.5-1.5S17 3 15 4.5 12 8 12 8Z"/></svg><div><b>Sponsored — Special Offer</b><small>Advertisement • click to explore</small></div><span class="go">Open →</span></div>
+<h1 class="vtitle" id="t">Loading…</h1>
+<div class="crow2">
+<div style="display:flex;align-items:center;gap:12px"><div class="cava" id="ava">📺</div><div><b id="cn">…</b><div style="color:var(--mut);font-size:12px" id="cs">…</div></div><button class="subbtn" id="subBtn">Subscribe</button></div>
+<div class="actions">
+<button class="pill" id="likeBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 11v9H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h3Zm2 9h8.5a2 2 0 0 0 2-1.6l1.5-7A2 2 0 0 0 19 8h-5l1-4.5A1.7 1.7 0 0 0 11.6 2L9 11Z"/></svg> <span id="ln">0</span></button>
+<button class="pill" id="disBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" style="transform:rotate(180deg)"><path d="M7 11v9H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h3Zm2 9h8.5a2 2 0 0 0 2-1.6l1.5-7A2 2 0 0 0 19 8h-5l1-4.5A1.7 1.7 0 0 0 11.6 2L9 11Z"/></svg> <span id="dn">0</span></button>
+<button class="pill" id="shareBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 10.8 15.7 7M8.2 13.2l7.5 3.8"/></svg> Share</button>
+<button class="pill" id="saveBtn">Save</button>
+<button class="pill red" id="repBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3 2.5 20h19L12 3Zm0 7v4m0 3.5v.1"/></svg> Report</button>
+</div>
+</div>
+<div class="srvrow" id="srvRow"></div>
+<div class="qrow">Quality: <select id="q"><option value="-1">Auto • Best</option></select><span id="st"></span></div>
+<div class="desc" id="desc"></div>
+</div>
+<div><h4 style="margin-bottom:10px">Up next</h4><div id="list"></div>
+<div class="pvban" id="pvSide" style="margin-top:12px"><div><b>Sponsored</b><small>Advertisement • click to explore</small></div><span class="go">Open →</span></div>
+</div>
+</div>
+<div id="repBg" onclick="if(event.target===this)this.style.display='none'"><div class="box">
+<h3 style="display:flex;align-items:center;gap:9px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f03" stroke-width="2" stroke-linecap="round"><path d="M12 3 2.5 20h19L12 3Zm0 7v4m0 3.5v.1"/></svg> Report this channel</h3><p style="color:var(--mut);font-size:13px;margin:6px 0 10px">সমস্যা সিলেক্ট করুন:</p>
+<label><input type="radio" name="rp" value="Not playing"> Not playing / buffering</label>
+<label><input type="radio" name="rp" value="Wrong channel"> Wrong channel / name</label>
+<label><input type="radio" name="rp" value="Adult/Spam"> Adult / spam content</label>
+<label><input type="radio" name="rp" value="Broken logo"> Broken logo / info</label>
+<div style="display:flex;gap:8px;margin-top:14px"><button class="pill" style="flex:1;justify-content:center" onclick="sendRep()">Send report</button><button class="pill" onclick="document.getElementById('repBg').style.display='none'">Cancel</button></div>
+</div></div>
+<div id="toast"></div>
+<script>
+const DB_URL="https://fram-and-go-default-rtdb.asia-southeast1.firebasedatabase.app";
+let db=null;try{if(window.firebase){firebase.initializeApp({databaseURL:DB_URL});db=firebase.database()}}catch(e){}
+function fbPush(path,data){try{db&&db.ref(path).push(data).catch(()=>{})}catch(e){}}
+function fbIncr(path){try{db&&db.ref(path).transaction(v=>(v||0)+1).catch(()=>{})}catch(e){}}
+const PLS=["/api/playlist?source=1","/api/playlist?source=2"];
+const P=new URLSearchParams(location.search);const U=decodeURIComponent(P.get('u')||'');let S=+(P.get('s')||0);
+let all=[],cur=null,hls=null;const v=document.getElementById('v');
+let toastT=null;const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)};
+const store=(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||d)}catch(e){return JSON.parse(d)}};
+function parseM3U(t){const L=t.split('\n');let out=[],cur2=null;for(let l of L){l=l.trim();if(l.startsWith('#EXTINF')){cur2={name:l.split(',').pop().trim(),logo:(l.match(/tvg-logo="([^"]*)"/)||[])[1]||'',group:(l.match(/group-title="([^"]*)"/)||[])[1]||'General'}}else if(l&&!l.startsWith('#')){if(cur2){cur2.url=l;out.push(cur2);cur2=null}else out.push({name:l,url:l,logo:'',group:'General'})}}return out}
+function isJunk(c){const u=(c.url||'').toLowerCase(),n=(c.name||'').trim().toLowerCase();if(u==='https//example.m3u8'||!u.startsWith('http'))return true;if(u.includes('.mpd'))return true;return n==='sonyliv_playlist.m3u'||n.startsWith('skym3u official')}
+async function loadOne(url){try{const r=await fetch(url+'&_='+Date.now());const t=await r.text();if(t.includes('#EXT'))return parseM3U(t)}catch(e){}return[]}
+(async()=>{
+const N=(P.get('n')||'').trim().toLowerCase();
+const match=(a)=>a.find(c=>c.url===U)||a.find(c=>c.urls&&c.urls.includes(U))||(N&&a.find(c=>c.name.trim().toLowerCase()===N))||null;
+/* fast path: play instantly from home-page snapshot, refresh servers in background */
+try{const snap=((JSON.parse(localStorage.getItem('cholche_cache3')||'null')||{}).data)||[];const f=U&&match(snap);if(f){all=snap;cur=f;base();document.getElementById('cnt').textContent=all.length+' channels';play();paintUp()}}catch(e){}
+const rs=await Promise.all(PLS.map(loadOne));const map=new Map();rs.forEach(l=>l.forEach(c=>{if(isJunk(c))return;const k=c.name.trim().toLowerCase()||c.url;if(!map.has(k))map.set(k,{...c,urls:[c.url]});else if(!map.get(k).urls.includes(c.url))map.get(k).urls.push(c.url)}));all=[...map.values()];
+const f=match(all)||all[0];
+if(!f&&!cur){document.getElementById('t').textContent='Channel not found';return}
+if(!cur&&U&&!f){cur={name:P.get('n')||'Live Channel',url:U,urls:[U],group:'Live'}}
+if(f&&(!cur||f.url!==cur.url)){cur=f;base();play()}
+else if(cur){S=Math.min(S,cur.urls.length-1);paintSrv()}
+document.getElementById('cnt').textContent=all.length+' channels';paintUp()})();
+function base(){S=Math.min(S,cur.urls.length-1);
+const rs=recallSrv();if(rs>=0)S=rs;
+document.getElementById('t').textContent=cur.name+' — LIVE';
+document.getElementById('cn').textContent=cur.name;document.getElementById('cs').textContent=cur.group+' • HD';
+document.getElementById('ava').innerHTML=`<img src="logo.png" alt="">`;
+document.getElementById('desc').textContent=`${cur.name} live in HD • ${cur.urls.length} server(s). Problem? Report করুন।`;
+document.title=cur.name+' — CholcheTV';
+pushHist(cur.url);paintUser();paintSrv()}
+/* ===== MONETIZATION: ad links on every channel ===== */
+const AD_LINKS=["https://omg10.com/4/11270726","https://omg10.com/4/11273647","https://omg10.com/4/11270727","https://omg10.com/4/10664748","https://omg10.com/4/11269225"];
+const randAd=()=>AD_LINKS[Math.floor(Math.random()*AD_LINKS.length)];
+document.getElementById('pvBan').onclick=()=>{fbIncr('cholchetv/stats/adClicks');window.open(randAd(),'_blank')};
+document.getElementById('pvSide').onclick=()=>{fbIncr('cholchetv/stats/adClicks');window.open(randAd(),'_blank')};
+/* YouTube-style: overlay ad + 10-min mid-roll */
+function showOverlay(){const o=document.getElementById('pvOver');if(!o)return;o.style.display='flex';clearTimeout(window._ovt);window._ovt=setTimeout(()=>{o.style.display='none'},20000)}
+function armMidroll(){clearInterval(window._midt);clearTimeout(window._ovt2);window._ovt2=setTimeout(showOverlay,8000);window._midt=setInterval(()=>{try{v.pause()}catch(e){}showPreroll(()=>{try{v.play()}catch(e){}})},600000)}
+let adTimer=null;
+function pvGo(el){const u=el&&el.dataset&&el.dataset.url;if(!u)return;try{fbIncr('cholchetv/stats/adClicks')}catch(e){}window.open(u,'_blank')}
+function showPreroll(done){const box=document.getElementById('pvPre'),skip=document.getElementById('pvSkip'),cr=document.getElementById('pvCreative'),url=randAd();
+cr.dataset.url=url;
+box.style.display='block';let n=5;skip.disabled=true;skip.textContent='Skip in 5…';let over=false;const fin=()=>{if(over)return;over=true;clearInterval(adTimer);clearTimeout(window._pvfin);box.style.display='none';done()};skip.onclick=fin;clearTimeout(window._pvfin);window._pvfin=setTimeout(fin,15000);
+clearInterval(adTimer);adTimer=setInterval(()=>{n--;if(n<=0){clearInterval(adTimer);skip.disabled=false;skip.textContent='Skip Ad ⏭'}else skip.textContent='Skip in '+n+'…'},1000)}
+function pushHist(u){let h=store('hist','[]').filter(x=>x!==u);h.unshift(u);localStorage.setItem('hist',JSON.stringify(h.slice(0,20)))}
+function paintSrv(){document.getElementById('srvRow').innerHTML=cur.urls.map((u,i)=>`<button class="pill ${i===S?'on':''}" onclick="S=${i};paintSrv();skipAdPlay()">📡 Server ${i+1}${i===S?' ✓':''}</button>`).join('')}
+/* server switch/retry: no repeat ad, straight to stream */
+function skipAdPlay(){const dbox=document.getElementById('deadBox');if(dbox)dbox.style.display='none';const r=cur.urls[S];rememberSrv();startStream(r,r.includes('m3u8'))}
+/* best-server: probe all servers during ad, play the fastest; remember winners */
+function recallSrv(){try{const m=JSON.parse(localStorage.getItem('srvwin')||'{}');const i=m[cur.name.trim().toLowerCase()];if(typeof i==='number'&&i>=0&&i<cur.urls.length)return i}catch(e){}return -1}
+function rememberSrv(){try{const m=JSON.parse(localStorage.getItem('srvwin')||'{}');m[cur.name.trim().toLowerCase()]=S;localStorage.setItem('srvwin',JSON.stringify(m))}catch(e){}}
+function probeServers(urls,cb){let done=false;const fin=(i)=>{if(done)return;done=true;try{cb(i)}catch(e){}};urls.forEach((u,i)=>{try{const c=new AbortController();const t=setTimeout(()=>{try{c.abort()}catch(e){}},6000);fetch('/api/stream?u='+encodeURIComponent(u),{signal:c.signal}).then(r=>{clearTimeout(t);if(!r.ok)return;if(!u.includes('m3u8')){fin(i);return}return r.text().then(t2=>{if(t2.includes('#EXT'))fin(i)})}).catch(()=>{clearTimeout(t)})}catch(e){}});setTimeout(()=>fin(-1),7000)}
+function spin(o){document.getElementById('spin').style.display=o?'grid':'none'}
+function play(){const dbox=document.getElementById('deadBox');if(dbox)dbox.style.display='none';const raw=cur.urls[S],isM=raw.includes('m3u8');fbPush('cholchetv/activity',{type:'play',ch:cur.name,t:Date.now()});fbIncr('cholchetv/stats/views');const k='cholchetv/watchStats/'+cur.name.replace(/[.#$\[\]\/]/g,'_');try{db&&db.ref(k).transaction(v=>({name:cur.name,count:((v&&v.count)||0)+1,last:Date.now()})).catch(()=>{})}catch(e){}armMidroll();document.getElementById('st').textContent='Ad চলছে…';window._played=false;window._best=-1;if(cur.urls.length>1){document.getElementById('st').textContent='Best server খুঁজছি…';probeServers(cur.urls,(i)=>{window._best=i})}try{showPreroll(()=>{window._played=true;if(window._best>=0&&window._best<cur.urls.length){S=window._best;paintSrv()}rememberSrv();startStream(cur.urls[S],cur.urls[S].includes('m3u8'))})}catch(e){startStream(raw,isM)}clearTimeout(window._pwdog);window._pwdog=setTimeout(()=>{if(!window._played&&cur){try{const r2=cur.urls[S];startStream(r2,r2.includes('m3u8'))}catch(e){}}},25000)} 
+function startStream(url,isM){spin(true);if(hls){hls.destroy();hls=null}
+clearTimeout(window._ldw);window._ldw=setTimeout(()=>{try{if(!window._played||(v.paused&&v.readyState<2)){streamFailed()}}catch(e){}},25000);
+const go=()=>{clearTimeout(window._ldw);window._played=true;try{rememberSrv()}catch(e){}const pr=v.play();if(pr&&pr.catch)pr.catch(()=>{try{v.muted=true;v.play().catch(()=>{})}catch(e){}toast('🔊 Sound-এর জন্য player-এ click করো')});spin(false);const q=document.getElementById('q');if(hls){q.innerHTML='<option value="-1">Auto • Best</option>'+[...hls.levels].map((l,j)=>({l,j})).sort((a,b)=>(b.l.height||0)-(a.l.height||0)).map(({l,j})=>`<option value="${j}">${l.height?l.height+'p':('L'+(j+1))}${l.bitrate?' • '+((l.bitrate/1000)|0)+'k':''}</option>`).join('');hls.nextLevel=[...hls.levels].map((l,j)=>({l,j})).sort((a,b)=>(b.l.height||0)-(a.l.height||0))[0].j}};
+if(isM&&!window.Hls){document.getElementById('st').textContent='Player load হচ্ছে…';let n=0;const iv=setInterval(()=>{if(window.Hls){clearInterval(iv);startStream(url,isM)}else if(++n>20){clearInterval(iv);v.onerror=()=>streamFailed();v.src='/api/stream?u='+encodeURIComponent(url);v.oncanplay=go}},500);return}
+const orig=url;url='/api/stream?u='+encodeURIComponent(url);
+if(window.Hls&&Hls.isSupported()&&isM){hls=new Hls({maxBufferLength:60,enableWorker:true});hls.loadSource(url);hls.attachMedia(v);hls.on(Hls.Events.MANIFEST_PARSED,go);hls.on(Hls.Events.ERROR,(e,d)=>{if(d.fatal){startDirect(orig,isM,go)}})}else{v.onerror=()=>streamFailed();v.src=url;v.oncanplay=go}}
+/* proxy fail -> direct upstream with browser cookies (works if user unlocked skym3u ads in this browser) */
+/* all servers failed -> offline message */
+function streamFailed(){if(cur&&S<cur.urls.length-1){S++;paintSrv();toast('⏭ Server '+(S+1)+' try…');const r=cur.urls[S];startStream(r,r.includes('m3u8'))}else{document.getElementById('st').textContent='Error — channel offline';spin(false);const d=document.getElementById('deadBox');if(d)d.style.display='grid'}}
+function startDirect(orig,isM,go){if(hls){hls.destroy();hls=null}toast('Direct try…');document.getElementById('st').textContent='Proxy fail — direct try…';
+if(window.Hls&&Hls.isSupported()&&isM){hls=new Hls({maxBufferLength:60,enableWorker:true,xhrSetup:function(xhr){try{xhr.withCredentials=true}catch(e){}}});hls.loadSource(orig);hls.attachMedia(v);hls.on(Hls.Events.MANIFEST_PARSED,go);hls.on(Hls.Events.ERROR,(e,d)=>{if(d.fatal){streamFailed()}})}else{v.onerror=()=>streamFailed();v.src=orig;v.oncanplay=go;setTimeout(()=>{try{if(v.src===orig&&v.networkState===3)streamFailed()}catch(e){}},25000)}}
+document.getElementById('q').onchange=e=>{if(hls)hls.currentLevel=+e.target.value};
+v.addEventListener('waiting',()=>spin(true));v.addEventListener('playing',()=>spin(false));
+/* polite adblock notice (never blocks playback) */
+try{if(!sessionStorage.getItem('abn')){const b=document.createElement('div');b.className='adsbox';b.style.cssText='height:1px;width:1px;position:absolute;left:-99px;top:0';document.body.appendChild(b);setTimeout(()=>{let blocked=false;try{blocked=getComputedStyle(b).display==='none'||b.offsetHeight===0&&b.offsetParent===null}catch(e){blocked=true}try{b.remove()}catch(e){}if(blocked)toast('💡 AdBlock off / whitelist করলে support হবে ❤️');try{sessionStorage.setItem('abn','1')}catch(e){}},1500)}}catch(e){}
+/* like / dislike / save / report */
+function paintUser(){const likes=store('likes','{}'),dis=store('dis','{}'),fav=new Set(store('fav','[]')),reps=store('reps','[]');
+document.getElementById('ln').textContent=likes[cur.url]||0;document.getElementById('dn').textContent=dis[cur.url]||0;
+document.getElementById('likeBtn').classList.toggle('on',!!store('myrate','{}')[cur.url+'L']);
+document.getElementById('disBtn').classList.toggle('on',!!store('myrate','{}')[cur.url+'D']);
+const sb=document.getElementById('subBtn');sb.textContent=fav.has(cur.url)?'Subscribed':'Subscribe';sb.classList.toggle('sub',fav.has(cur.url));
+document.getElementById('saveBtn').textContent=fav.has(cur.url)?'⭐ Saved':'⭐ Save';
+document.getElementById('repBtn').textContent=reps.includes(cur.url)?'⚠ Reported':'⚠ Report'}
+document.getElementById('likeBtn').onclick=()=>{const r=store('myrate','{}'),l=store('likes','{}');if(r[cur.url+'L']){delete r[cur.url+'L'];l[cur.url]=(l[cur.url]||1)-1}else{r[cur.url+'L']=1;l[cur.url]=(l[cur.url]||0)+1}localStorage.setItem('myrate',JSON.stringify(r));localStorage.setItem('likes',JSON.stringify(l));paintUser()};
+document.getElementById('disBtn').onclick=()=>{const r=store('myrate','{}'),d=store('dis','{}');if(r[cur.url+'D']){delete r[cur.url+'D'];d[cur.url]=(d[cur.url]||1)-1}else{r[cur.url+'D']=1;d[cur.url]=(d[cur.url]||0)+1}localStorage.setItem('myrate',JSON.stringify(r));localStorage.setItem('dis',JSON.stringify(d));paintUser()};
+document.getElementById('saveBtn').onclick=document.getElementById('subBtn').onclick=()=>{const f=new Set(store('fav','[]'));f.has(cur.url)?f.delete(cur.url):f.add(cur.url);localStorage.setItem('fav',JSON.stringify([...f]));paintUser();toast(f.has(cur.url)?'Saved ✅':'Removed')};
+document.getElementById('shareBtn').onclick=()=>{if(navigator.share)navigator.share({title:cur.name,url:location.href}).catch(()=>{});else{navigator.clipboard?.writeText(location.href);toast('Link copied 🔗')}};
+document.getElementById('repBtn').onclick=()=>{document.getElementById('repBg').style.display='grid'};
+function sendRep(){const r=document.querySelector('input[name=rp]:checked');if(!r){toast('একটা কারণ select করুন');return}const reps=store('reps','[]');if(!reps.includes(cur.url))reps.push(cur.url);localStorage.setItem('reps',JSON.stringify(reps));localStorage.setItem('rep_'+cur.url,r.value);fbPush('cholchetv/reports',{ch:cur.name,reason:r.value,t:Date.now()});fbIncr('cholchetv/stats/reports');document.getElementById('repBg').style.display='none';paintUser();toast('✅ Report পাঠানো হয়েছে: '+r.value)}
+function paintUp(){const rest=all.filter(c=>c.url!==cur.url&&(c.group===cur.group?1:1)).slice(0,30);document.getElementById('list').innerHTML=rest.map(c=>`<div class="urow" onclick="location.href='watch.html?u=${encodeURIComponent(c.url)}&s=0&n='+encodeURIComponent(c.name)"><div class="th"><img src="logo.png" alt="" loading="lazy"><span class="live">● LIVE</span></div><div><b>${c.name}</b><small>${c.group}</small></div></div>`).join('')}
+</script>
+</body></html>
