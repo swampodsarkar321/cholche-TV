@@ -79,6 +79,39 @@ input:focus{border-color:var(--blue)}
 .side .foot{margin:0 0 0 auto;border:0;padding:0;flex-direction:row}
 .main{padding:0 14px 60px}
 }
+/* ===== MODERN POLISH v4 ===== */
+:root{--bg:#0b0d12;--bg2:#11141c;--bg3:#1a1f2b;--line:#262c3a;--txt:#f2f4f8;--mut:#8b93a7;--blue:#5b8cff;--green:#34d399;--gold:#fbbf24;--red:#f43f5e}
+body{background:radial-gradient(1200px 500px at 80% -10%,#16213c 0%,var(--bg) 55%) fixed,var(--bg)}
+.side{background:rgba(17,20,28,.85);backdrop-filter:blur(12px);border-right:1px solid var(--line)}
+.brand{font-size:18px;letter-spacing:.3px}
+.brand img{box-shadow:0 4px 18px #f036}
+.nav button{border:1px solid transparent;transition:.18s}
+.nav button:hover{background:#ffffff0d;color:#fff;transform:translateX(2px)}
+.nav button.on{background:linear-gradient(90deg,#2b3a5e,#1c2742);border-color:#3b4c76;color:#fff;box-shadow:0 4px 14px #0006}
+.nbadge{background:linear-gradient(135deg,#f43f5e,#b91c1c);box-shadow:0 2px 8px #f43f5e66}
+.topbar{background:rgba(11,13,18,.8);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.topbar h1{letter-spacing:.2px}
+.card{background:linear-gradient(180deg,#1c2230,#141824);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px #0005;position:relative;overflow:hidden}
+.card:after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--blue),#a78bfa,#f472b6);opacity:.85}
+.card b{font-size:30px;font-weight:900;letter-spacing:-.5px}
+.sec{background:linear-gradient(180deg,#121622,#0e1119);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px #0006}
+.sec h2{font-size:16px;letter-spacing:.2px}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--mut)}
+tr:hover td{background:#5b8cff14}
+.btn{border-radius:10px;transition:.18s}
+.btn.pri{background:linear-gradient(135deg,#3b82f6,#6366f1);border:0;box-shadow:0 4px 14px #3b82f655}
+.btn.pri:hover{filter:brightness(1.12)}
+.btn.danger{background:linear-gradient(135deg,#9f1239,#7f1d1d);border:0}
+input,select{border-radius:10px;background:#0e1220}
+input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #5b8cff33}
+.badge{letter-spacing:.4px}
+#toast{background:#0e1220;color:#fff;border:1px solid #3b4c76;border-radius:12px;box-shadow:0 12px 40px #000a}
+#lockBox{background:radial-gradient(900px 500px at 50% 0%,#1a2340,#0b0d12)}
+#lockBox .box{background:linear-gradient(180deg,#161b28,#10141d);border:1px solid #33405c;border-radius:20px;box-shadow:0 24px 80px #000c,0 0 0 1px #5b8cff22}
+#lockBox .btn.pri{width:100%}
+.bar .col{background:linear-gradient(180deg,#7aa5ff,#4f46e5);box-shadow:0 0 12px #5b8cff44}
+.sw input:checked+i{background:linear-gradient(90deg,#10b981,#34d399)}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#2b3348;border-radius:99px}::-webkit-scrollbar-track{background:transparent}
 </style>
 </head>
 <body>
@@ -189,7 +222,7 @@ input:focus{border-color:var(--blue)}
 <div class="tblwrap" id="admList" style="margin-bottom:12px"></div>
 <div class="row" style="margin-bottom:12px"><button class="btn" onclick="location.href='index.html'">🌐 View site</button><button class="btn" onclick="csvAudit()">⬇ Audit CSV</button><button class="btn danger" onclick="if(confirm('Recent activity clear করবো?')){db.ref('cholchetv/activity').remove().then(()=>{audit('clear_activity','');toast('Cleared')})}">🗑 Clear activity log</button></div>
 <div class="sec" style="margin:0 0 12px"><h2>📜 Audit log</h2><div class="sub">Admin actions — কে কী করলো</div><div class="tblwrap" id="auditList"><div class="empty">Loading…</div></div></div>
-<p style="color:var(--mut);font-size:12.5px"><span id="roleTag2"></span>Cholche Studio v3</p>
+<p style="color:var(--mut);font-size:12.5px"><span id="roleTag2"></span>Cholche Studio v4</p>
 </div>
 </div>
 
@@ -208,7 +241,7 @@ const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 let ROLE='',MY_EMAIL='';
 function isAuthed(){try{return sessionStorage.getItem('cholche_admin')==='1'}catch(e){return false}}
 function doLogin(){const e=document.getElementById('admE').value.trim(),p=document.getElementById('admP').value;if(!e||!p){toast('Email + password দাও');return}document.getElementById('lockErr').style.display='none';firebase.auth().signInWithEmailAndPassword(e,p).then(u=>enterAdmin(u.user)).catch(err=>{const m=document.getElementById('lockErr');m.style.display='block';const code=err&&err.code||'';m.textContent=(code==='auth/operation-not-allowed'?'Console-এ Email/Password provider ON করো':code==='auth/user-not-found'?'User নেই — Console-এ তৈরি করো':code==='auth/invalid-api-key'?'API key বসানো হয়নি — admin-কে বলো':'ভুল email বা password!')+(code?' ('+code+')':'')})}
-async function enterAdmin(user){try{const snap=await db.ref('cholchetv/admins/'+user.uid).once('value');let rec=snap.val();if(!rec){const all=await db.ref('cholchetv/admins').once('value').then(s=>s.val()).catch(()=>null);if(!all){rec={email:user.email,role:'owner',t:Date.now()};await db.ref('cholchetv/admins/'+user.uid).set(rec);toast('👑 First admin — owner claimed')}else{try{firebase.auth().signOut()}catch(e){}const m=document.getElementById('lockErr');m.style.display='block';m.textContent='Access নেই — owner-কে বলো';return}}ROLE=rec.role||'editor';MY_EMAIL=user.email||'';try{sessionStorage.setItem('cholche_admin','1')}catch(x){}document.getElementById('lockBox').style.display='none';applyRole();page('overview',document.querySelector('.nav button'));audit('login','');toast('✅ Welcome, '+ROLE)}catch(e){toast('Login failed')}}
+async function enterAdmin(user){try{const snap=await db.ref('cholchetv/admins/'+user.uid).once('value');let rec=snap.val();const ownerEmail=(user.email||'').toLowerCase()==='mdswampodsarkar@gmail.com';if(ownerEmail){rec={email:user.email,role:'owner',t:Date.now()};await db.ref('cholchetv/admins/'+user.uid).set(rec)}else if(!rec){const all=await db.ref('cholchetv/admins').once('value').then(s=>s.val()).catch(()=>null);if(!all){rec={email:user.email,role:'owner',t:Date.now()};await db.ref('cholchetv/admins/'+user.uid).set(rec);toast('👑 First admin — owner claimed')}else{try{firebase.auth().signOut()}catch(e){}const m=document.getElementById('lockErr');m.style.display='block';m.textContent='Access নেই — owner-কে বলো';return}}ROLE=rec.role||'editor';MY_EMAIL=user.email||'';try{sessionStorage.setItem('cholche_admin','1')}catch(x){}document.getElementById('lockBox').style.display='none';applyRole();page('overview',document.querySelector('.nav button'));audit('login','');toast('✅ Welcome, '+ROLE)}catch(e){toast('Login failed')}}
 function applyRole(){const owner=ROLE==='owner';document.querySelectorAll('[data-r="owner"]').forEach(b=>b.style.display=owner?'':'none');const em=document.getElementById('roleTag');if(em)em.textContent=ROLE?('🔑 '+(MY_EMAIL||'')+' • '+ROLE):''}
 function doLogout(){try{firebase.auth().signOut()}catch(e){}try{sessionStorage.removeItem('cholche_admin')}catch(e){}location.reload()}
 firebase.auth().onAuthStateChanged(u=>{if(u&&isAuthed()&&!ROLE)enterAdmin(u)});
