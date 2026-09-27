@@ -169,7 +169,7 @@ if(window.Hls&&Hls.isSupported()&&isM){hls=new Hls({maxBufferLength:60,enableWor
 /* all servers failed -> offline message */
 function streamFailed(){if(cur&&S<cur.urls.length-1){S++;paintSrv();toast('⏭ Server '+(S+1)+' try…');const r=cur.urls[S];startStream(r,r.includes('m3u8'))}else{document.getElementById('st').textContent='Error — channel offline';spin(false);const d=document.getElementById('deadBox');if(d)d.style.display='grid'}}
 function startDirect(orig,isM,go){if(hls){hls.destroy();hls=null}toast('Direct try…');document.getElementById('st').textContent='Proxy fail — direct try…';
-if(window.Hls&&Hls.isSupported()&&isM){hls=new Hls({maxBufferLength:60,enableWorker:true,xhrSetup:function(xhr){try{xhr.withCredentials=true}catch(e){}}});hls.loadSource(orig);hls.attachMedia(v);hls.on(Hls.Events.MANIFEST_PARSED,go);hls.on(Hls.Events.ERROR,(e,d)=>{if(d.fatal){streamFailed()}})}else{v.onerror=()=>streamFailed();v.src=orig;v.oncanplay=go;setTimeout(()=>{try{if(v.src===orig&&v.networkState===3)streamFailed()}catch(e){}},25000)}}
+if(window.Hls&&Hls.isSupported()&&isM){hls=new Hls({maxBufferLength:60,enableWorker:true});hls.loadSource(orig);hls.attachMedia(v);hls.on(Hls.Events.MANIFEST_PARSED,go);hls.on(Hls.Events.ERROR,(e,d)=>{if(d.fatal){streamFailed()}})}else{v.onerror=()=>streamFailed();v.src=orig;v.oncanplay=go;setTimeout(()=>{try{if(v.src===orig&&v.networkState===3)streamFailed()}catch(e){}},25000)}}
 document.getElementById('q').onchange=e=>{if(hls)hls.currentLevel=+e.target.value};
 v.addEventListener('waiting',()=>spin(true));v.addEventListener('playing',()=>spin(false));
 /* polite adblock notice (never blocks playback) */
