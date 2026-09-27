@@ -199,7 +199,7 @@ input:focus{border-color:var(--blue)}
 <script>
 const DB_URL="https://fram-and-go-default-rtdb.asia-southeast1.firebasedatabase.app";
 /* Auth-এর জন্য apiKey লাগে — Console (Project settings) থেকে Web API Key বসাও */
-const FB_CFG={apiKey:"PASTE_WEB_API_KEY_HERE",authDomain:"fram-and-go.firebaseapp.com",databaseURL:DB_URL,projectId:"fram-and-go"};
+const FB_CFG={apiKey:"AIzaSyAeoScw5UK53ElBnNdhtJVAETb3_isOEKs",authDomain:"fram-and-go.firebaseapp.com",databaseURL:DB_URL,projectId:"fram-and-go",storageBucket:"fram-and-go.firebasestorage.app",messagingSenderId:"781295119002",appId:"1:781295119002:web:4be2d54934395b491c0d23"};
 try{firebase.initializeApp(FB_CFG)}catch(e){try{firebase.initializeApp({databaseURL:DB_URL})}catch(x){}}
 const db=firebase.database();
 let toastT=null;const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)};
