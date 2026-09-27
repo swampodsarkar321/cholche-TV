@@ -198,14 +198,16 @@ input:focus{border-color:var(--blue)}
 <div id="toast"></div>
 <script>
 const DB_URL="https://fram-and-go-default-rtdb.asia-southeast1.firebasedatabase.app";
-firebase.initializeApp({databaseURL:DB_URL});
+/* Auth-এর জন্য apiKey লাগে — Console (Project settings) থেকে Web API Key বসাও */
+const FB_CFG={apiKey:"PASTE_WEB_API_KEY_HERE",authDomain:"fram-and-go.firebaseapp.com",databaseURL:DB_URL,projectId:"fram-and-go"};
+try{firebase.initializeApp(FB_CFG)}catch(e){try{firebase.initializeApp({databaseURL:DB_URL})}catch(x){}}
 const db=firebase.database();
 let toastT=null;const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)};
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 /* ===== real auth: Firebase Authentication + RTDB roles (no password in code) ===== */
 let ROLE='',MY_EMAIL='';
 function isAuthed(){try{return sessionStorage.getItem('cholche_admin')==='1'}catch(e){return false}}
-function doLogin(){const e=document.getElementById('admE').value.trim(),p=document.getElementById('admP').value;if(!e||!p){toast('Email + password দাও');return}document.getElementById('lockErr').style.display='none';firebase.auth().signInWithEmailAndPassword(e,p).then(u=>enterAdmin(u.user)).catch(err=>{const m=document.getElementById('lockErr');m.style.display='block';m.textContent=err&&err.code==='auth/operation-not-allowed'?'Console-এ Email/Password provider ON করো':err&&err.code==='auth/user-not-found'?'User নেই — Console-এ তৈরি করো':'ভুল email বা password!'})}
+function doLogin(){const e=document.getElementById('admE').value.trim(),p=document.getElementById('admP').value;if(!e||!p){toast('Email + password দাও');return}document.getElementById('lockErr').style.display='none';firebase.auth().signInWithEmailAndPassword(e,p).then(u=>enterAdmin(u.user)).catch(err=>{const m=document.getElementById('lockErr');m.style.display='block';const code=err&&err.code||'';m.textContent=(code==='auth/operation-not-allowed'?'Console-এ Email/Password provider ON করো':code==='auth/user-not-found'?'User নেই — Console-এ তৈরি করো':code==='auth/invalid-api-key'?'API key বসানো হয়নি — admin-কে বলো':'ভুল email বা password!')+(code?' ('+code+')':'')})}
 async function enterAdmin(user){try{const snap=await db.ref('cholchetv/admins/'+user.uid).once('value');let rec=snap.val();if(!rec){const all=await db.ref('cholchetv/admins').once('value').then(s=>s.val()).catch(()=>null);if(!all){rec={email:user.email,role:'owner',t:Date.now()};await db.ref('cholchetv/admins/'+user.uid).set(rec);toast('👑 First admin — owner claimed')}else{try{firebase.auth().signOut()}catch(e){}const m=document.getElementById('lockErr');m.style.display='block';m.textContent='Access নেই — owner-কে বলো';return}}ROLE=rec.role||'editor';MY_EMAIL=user.email||'';try{sessionStorage.setItem('cholche_admin','1')}catch(x){}document.getElementById('lockBox').style.display='none';applyRole();page('overview',document.querySelector('.nav button'));audit('login','');toast('✅ Welcome, '+ROLE)}catch(e){toast('Login failed')}}
 function applyRole(){const owner=ROLE==='owner';document.querySelectorAll('[data-r="owner"]').forEach(b=>b.style.display=owner?'':'none');const em=document.getElementById('roleTag');if(em)em.textContent=ROLE?('🔑 '+(MY_EMAIL||'')+' • '+ROLE):''}
 function doLogout(){try{firebase.auth().signOut()}catch(e){}try{sessionStorage.removeItem('cholche_admin')}catch(e){}location.reload()}
