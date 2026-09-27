@@ -118,6 +118,11 @@ def proxify_m3u8(text, base):
             out.append(line)
     return ('\n'.join(out) + '\n').encode('utf-8')
 class H(SimpleHTTPRequestHandler):
+    def end_headers(self):
+        # never cache html: guarantees users always get the latest player code
+        if self.path.split("?")[0].endswith((".html", ".m3u")):
+            self.send_header("Cache-Control", "no-store")
+        super().end_headers()
     def send_bin(self, data, ctype):
         self.send_response(200)
         self.send_header("Content-Type", ctype)

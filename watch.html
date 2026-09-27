@@ -146,6 +146,7 @@ function armMidroll(){clearInterval(window._midt);clearTimeout(window._ovt2);win
 let adTimer=null;
 function pvGo(el){const u=el&&el.dataset&&el.dataset.url;if(!u)return;try{fbIncr('cholchetv/stats/adClicks')}catch(e){}window.open(u,'_blank')}
 function showPreroll(done){const box=document.getElementById('pvPre'),skip=document.getElementById('pvSkip'),cr=document.getElementById('pvCreative'),url=randAd();
+if(!box||!skip||!cr){try{done()}catch(e){}return}
 cr.dataset.url=url;
 box.style.display='block';let n=5;skip.disabled=true;skip.textContent='Skip in 5…';let over=false;const fin=()=>{if(over)return;over=true;clearInterval(adTimer);clearTimeout(window._pvfin);box.style.display='none';done()};skip.onclick=fin;clearTimeout(window._pvfin);window._pvfin=setTimeout(fin,15000);
 clearInterval(adTimer);adTimer=setInterval(()=>{n--;if(n<=0){clearInterval(adTimer);skip.disabled=false;skip.textContent='Skip Ad ⏭'}else skip.textContent='Skip in '+n+'…'},1000)}
