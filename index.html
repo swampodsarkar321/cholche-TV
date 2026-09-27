@@ -212,7 +212,7 @@ footer{color:var(--mut);font-size:12px;padding:24px;text-align:center}
 <p><b style="color:#ddd">Is Cholche TV free?</b> Yes, 100% free, no account needed.<br>
 <b style="color:#ddd">Stream buffering?</b> Open the channel and switch Server 1 ↔ Server 2, or lower quality.<br>
 <b style="color:#ddd">Which devices?</b> Any mobile, PC or Smart TV browser with internet.</p>
-<p style="margin-top:12px">Cholche TV • Live TV Platform © 2026</p>
+<p style="margin-top:12px">Cholche TV • Live TV Platform © 2026 • v28</p>
 </div></footer>
 
 <div id="popBg" onclick="if(event.target===this)closePop()"><div class="box">
@@ -230,9 +230,12 @@ let AD_LINKS=["https://omg10.com/4/11270726","https://omg10.com/4/11273647","htt
 const DB_URL="https://fram-and-go-default-rtdb.asia-southeast1.firebasedatabase.app";
 let db=null;try{if(window.firebase){firebase.initializeApp({databaseURL:DB_URL});db=firebase.database()}}catch(e){}
 function fbPush(path,data){try{db&&db.ref(path).push(data).catch(()=>{})}catch(e){}}
-/* admin Settings -> ads + maintenance switches */
+/* admin Settings -> ads + maintenance switches (REALTIME: refresh ছাড়াই live apply) */
 function showMaint(){const m=document.getElementById('mnt');if(m)m.style.display='grid';try{document.title='Maintenance — Cholche TV'}catch(e){}}
-let ADS_ON=true;try{if(db)db.ref('cholchetv/settings').once('value').then(s=>{const v=s.val()||{};if(v.adsEnabled===false){ADS_ON=false;const st=document.getElementById('pvStrip');if(st)st.style.display='none'}if(v.maintenance===true)showMaint()}).catch(()=>{})}catch(e){}
+function hideMaint(){const m=document.getElementById('mnt');if(m)m.style.display='none'}
+let ADS_ON=true,lastAdsOn=true;
+function applySettings(v){v=v||{};ADS_ON=v.adsEnabled!==false;const st=document.getElementById('pvStrip');if(st)st.style.display=ADS_ON?'flex':'none';if(ADS_ON!==lastAdsOn){lastAdsOn=ADS_ON;try{applyFilter()}catch(e){}}if(v.maintenance===true)showMaint();else hideMaint()}
+try{if(db)db.ref('cholchetv/settings').on('value',s=>{try{applySettings(s.val())}catch(e){}})}catch(e){}
 /* admin panel (Ad Links tab) -> site ads auto-update */
 try{if(db)db.ref('cholchetv/adLinks').once('value').then(s=>{const raw=s.val();const a=raw?(Array.isArray(raw)?raw:Object.values(raw)):[];const u=a.map(x=>typeof x==='string'?x:(x&&x.url)).filter(x=>x&&x.indexOf('http')===0);if(u.length)AD_LINKS=u}).catch(()=>{})}catch(e){}
 let all=[],filtered=[],idx=0,activeCat="All",view="home",hls=null,srv=0,liked=new Set();

@@ -143,9 +143,12 @@ let AD_LINKS=["https://omg10.com/4/11270726","https://omg10.com/4/11273647","htt
 const randAd=()=>AD_LINKS[Math.floor(Math.random()*AD_LINKS.length)];
 /* admin panel (Ad Links tab) -> site ads auto-update */
 try{if(db)db.ref('cholchetv/adLinks').once('value').then(s=>{const raw=s.val();const a=raw?(Array.isArray(raw)?raw:Object.values(raw)):[];const u=a.map(x=>typeof x==='string'?x:(x&&x.url)).filter(x=>x&&x.indexOf('http')===0);if(u.length)AD_LINKS=u}).catch(()=>{})}catch(e){}
-/* admin Settings -> ads + maintenance switches */
+/* admin Settings -> ads + maintenance switches (REALTIME) */
 function showMaint(){try{v.pause()}catch(e){}const m=document.getElementById('mnt');if(m)m.style.display='grid';try{document.title='Maintenance — Cholche TV'}catch(e){}}
-let ADS_ON=true;try{if(db)db.ref('cholchetv/settings').once('value').then(s=>{const set=s.val()||{};if(set.adsEnabled===false){ADS_ON=false;['pvBan','pvSide'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none'})}if(set.maintenance===true)showMaint()}).catch(()=>{})}catch(e){}
+function hideMaint(){const m=document.getElementById('mnt');if(m)m.style.display='none'}
+let ADS_ON=true;
+function applySettingsW(st){st=st||{};ADS_ON=st.adsEnabled!==false;['pvBan','pvSide'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=ADS_ON?'':'none'});if(st.maintenance===true)showMaint();else hideMaint()}
+try{if(db)db.ref('cholchetv/settings').on('value',s=>{try{applySettingsW(s.val())}catch(e){}})}catch(e){}
 document.getElementById('pvBan').onclick=()=>{fbIncr('cholchetv/stats/adClicks');window.open(randAd(),'_blank')};
 document.getElementById('pvSide').onclick=()=>{fbIncr('cholchetv/stats/adClicks');window.open(randAd(),'_blank')};
 /* YouTube-style: overlay ad + 10-min mid-roll */
@@ -178,7 +181,7 @@ if(window.Hls&&Hls.isSupported()&&isM){hls=new Hls({maxBufferLength:60,enableWor
 /* all servers failed -> offline message */
 function streamFailed(){if(cur&&S<cur.urls.length-1){S++;paintSrv();toast('⏭ Server '+(S+1)+' try…');const r=cur.urls[S];startStream(r,r.includes('m3u8'))}else{document.getElementById('st').textContent='Error — channel offline';spin(false);const d=document.getElementById('deadBox');if(d)d.style.display='grid';autoBroken(cur)}}
 /* play fail (all servers dead) -> broken list-এ নামসহ auto report (24h dedupe) */
-function autoBroken(c){if(!c||!c.name)return;try{const u=c.url||c.name;let k='ab_';for(let i=0;i<u.length;i++)k+=u.charCodeAt(i).toString(36);k=k.slice(0,40);const last=+localStorage.getItem(k)||0;if(Date.now()-last<864e5)return;localStorage.setItem(k,String(Date.now()))}catch(e){}try{fbPush('cholchetv/broken',{ch:c.name,url:c.url||'',reason:'auto: play failed (all servers)',t:Date.now()})}catch(e){}try{fbPush('cholchetv/activity',{type:'broken',ch:c.name,t:Date.now()})}catch(e){}}
+function autoBroken(c){if(!c||!c.name)return;try{const u=c.url||c.name;let k='ab_';for(let i=0;i<u.length;i++)k+=u.charCodeAt(i).toString(36);k=k.slice(0,40);const last=+localStorage.getItem(k)||0;if(Date.now()-last<864e5)return;localStorage.setItem(k,String(Date.now()))}catch(e){}const bp={ch:c.name,url:c.url||'',reason:'auto: play failed (all servers)',t:Date.now()};try{if(db)db.ref('cholchetv/broken').push(bp).catch(()=>restBrk(bp));else restBrk(bp)}catch(e){restBrk(bp)}try{fbPush('cholchetv/activity',{type:'broken',ch:c.name,t:Date.now()})}catch(e){}}
 function startDirect(orig,isM,go){if(hls){hls.destroy();hls=null}toast('Direct try…');document.getElementById('st').textContent='Proxy fail — direct try…';
 if(window.Hls&&Hls.isSupported()&&isM){hls=new Hls({maxBufferLength:60,enableWorker:true});hls.loadSource(orig);hls.attachMedia(v);hls.on(Hls.Events.MANIFEST_PARSED,go);hls.on(Hls.Events.ERROR,(e,d)=>{if(d.fatal){streamFailed()}})}else{v.onerror=()=>streamFailed();v.src=orig;v.oncanplay=go;setTimeout(()=>{try{if(v.src===orig&&v.networkState===3)streamFailed()}catch(e){}},25000)}}
 document.getElementById('q').onchange=e=>{if(hls)hls.currentLevel=+e.target.value};
@@ -201,6 +204,7 @@ document.getElementById('repBtn').onclick=()=>{document.getElementById('repBg').
 function sendRep(){if(!cur||!cur.url){toast('Channel load হয়নি — refresh করে আবার try করো');return}const r=document.querySelector('input[name=rp]:checked');const reason=r?r.value:'Not playing';try{const reps=store('reps','[]');if(!reps.includes(cur.url))reps.push(cur.url);localStorage.setItem('reps',JSON.stringify(reps));localStorage.setItem('rep_'+cur.url,reason)}catch(e){}const payload={ch:cur.name,reason:reason,t:Date.now()};try{if(db)db.ref('cholchetv/reports').push(payload).catch(()=>restRep(payload));else restRep(payload)}catch(e){restRep(payload)}try{fbIncr('cholchetv/stats/reports')}catch(e){}try{fbPush('cholchetv/activity',{type:'report',ch:cur.name,t:Date.now()})}catch(e){}document.getElementById('repBg').style.display='none';try{paintUser()}catch(e){}toast('✅ Report পাঠানো হয়েছে: '+reason)}
 /* SDK push fail হলে direct REST fallback — report হারাবে না */
 function restRep(p){try{fetch(DB_URL+'/cholchetv/reports.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}).catch(()=>{})}catch(e){}}
+function restBrk(p){try{fetch(DB_URL+'/cholchetv/broken.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}).catch(()=>{})}catch(e){}}
 function paintUp(){const rest=all.filter(c=>c.url!==cur.url&&(c.group===cur.group?1:1)).slice(0,30);document.getElementById('list').innerHTML=rest.map(c=>`<div class="urow" onclick="location.href='watch.html?u=${encodeURIComponent(c.url)}&s=0&n='+encodeURIComponent(c.name)"><div class="th"><img src="logo.png" alt="" loading="lazy"><span class="live">● LIVE</span></div><div><b>${c.name}</b><small>${c.group}</small></div></div>`).join('')}
 </script>
 </body></html>
