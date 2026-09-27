@@ -6,7 +6,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;700;900&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0f0f0f;--bg2:#171717;--bg3:#272727;--line:#3d3d3d;--txt:#f1f1f1;--mut:#aaa;--red:#f03;--green:#4ade80;--blue:#60a5fa;--gold:#fabb00}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -112,6 +112,27 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #5b8cff33}
 .bar .col{background:linear-gradient(180deg,#7aa5ff,#4f46e5);box-shadow:0 0 12px #5b8cff44}
 .sw input:checked+i{background:linear-gradient(90deg,#10b981,#34d399)}
 ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#2b3348;border-radius:99px}::-webkit-scrollbar-track{background:transparent}
+/* ===== PRO v5 ===== */
+body{font-family:Inter,Roboto,'Hind Siliguri',sans-serif}
+.side{width:250px;padding:18px 14px}
+.navlabel{font-size:10.5px;letter-spacing:1.6px;color:var(--mut);padding:14px 12px 6px;font-weight:800}
+.nav button{padding:9px 10px;font-size:13.5px;border-radius:12px}
+.nav button .ic{width:32px;height:32px;border-radius:10px;background:#ffffff0d;display:grid;place-items:center;font-size:16px;flex-shrink:0}
+.nav button.on .ic{background:linear-gradient(135deg,#3b82f6,#8b5cf6);box-shadow:0 4px 12px #3b82f655}
+.uchip{display:flex;align-items:center;gap:10px;background:#ffffff08;border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-top:8px}
+.uava{width:34px;height:34px;border-radius:99px;background:linear-gradient(135deg,#f43f5e,#8b5cf6);display:grid;place-items:center;font-weight:900;flex-shrink:0}
+.cards{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.card{padding:18px}
+.card .delta{font-size:11.5px;color:var(--green);margin-top:6px;display:block;font-weight:600}
+.topbar h1{font-size:22px;font-weight:900;letter-spacing:-.3px}
+.tblwrap{background:#0d1119;border:1px solid var(--line);border-radius:14px;overflow:auto}
+td{padding:11px 14px}th{padding:11px 14px;position:sticky;top:0;background:#0d1119;z-index:2}
+.main>div[id^="pg-"]{animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}}
+#lockBox .box{padding:36px 32px}
+#lockBox h2{font-size:24px;font-weight:900;letter-spacing:-.3px}
+#lockBox input{padding:12px 16px;border-radius:12px}
+.sec h2{font-weight:700}
 </style>
 </head>
 <body>
@@ -129,6 +150,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #5b8cff33}
 <div class="brand" onclick="location.href='index.html'"><img src="logo.png" alt=""><span class="t">Cholche<small>STUDIO</small></span></div>
 <nav class="nav">
 <button class="on" onclick="page('overview',this)"><span class="ic">📊</span><span class="lbl">Overview</span></button>
+<div class="navlabel">MANAGE</div>
 <button onclick="page('channels',this)"><span class="ic">📺</span><span class="lbl">Channels</span></button>
 <button onclick="page('viewers',this)"><span class="ic">👥</span><span class="lbl">Viewers</span></button>
 <button data-r="owner" onclick="page('pls',this)"><span class="ic">🎬</span><span class="lbl">Playlists</span></button>
@@ -136,11 +158,12 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #5b8cff33}
 <button onclick="page('mod',this)"><span class="ic">⚠</span><span class="lbl">Moderation</span><span class="nbadge" id="modBadge" style="display:none"></span></button>
 <button onclick="page('health',this)"><span class="ic">💓</span><span class="lbl">Health</span></button>
 <button onclick="page('stats',this)"><span class="ic">📈</span><span class="lbl">Analytics</span></button>
+<div class="navlabel">SYSTEM</div>
 <button data-r="owner" onclick="page('settings',this)"><span class="ic">⚙</span><span class="lbl">Settings</span></button>
 </nav>
 <div class="foot">
 <button class="btn sm" style="border:0;color:var(--mut)" onclick="location.href='index.html'">🌐 View site</button>
-<button class="btn sm" style="border:0;color:var(--mut)" onclick="doLogout()">⏻ Logout</button>
+<div class="uchip"><div class="uava" id="uAva">A</div><div style="min-width:0;flex:1"><b id="uEmail" style="font-size:12.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">…</b><small id="uRole" style="color:var(--mut)">…</small></div><button class="btn sm" style="border:0;color:var(--mut)" onclick="doLogout()" title="Logout">⏻</button></div>
 </div>
 </aside>
 <div class="main">
@@ -222,7 +245,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #5b8cff33}
 <div class="tblwrap" id="admList" style="margin-bottom:12px"></div>
 <div class="row" style="margin-bottom:12px"><button class="btn" onclick="location.href='index.html'">🌐 View site</button><button class="btn" onclick="csvAudit()">⬇ Audit CSV</button><button class="btn danger" onclick="if(confirm('Recent activity clear করবো?')){db.ref('cholchetv/activity').remove().then(()=>{audit('clear_activity','');toast('Cleared')})}">🗑 Clear activity log</button></div>
 <div class="sec" style="margin:0 0 12px"><h2>📜 Audit log</h2><div class="sub">Admin actions — কে কী করলো</div><div class="tblwrap" id="auditList"><div class="empty">Loading…</div></div></div>
-<p style="color:var(--mut);font-size:12.5px"><span id="roleTag2"></span>Cholche Studio v4</p>
+<p style="color:var(--mut);font-size:12.5px"><span id="roleTag2"></span>Cholche Studio v5</p>
 </div>
 </div>
 
@@ -242,7 +265,7 @@ let ROLE='',MY_EMAIL='';
 function isAuthed(){try{return sessionStorage.getItem('cholche_admin')==='1'}catch(e){return false}}
 function doLogin(){const e=document.getElementById('admE').value.trim(),p=document.getElementById('admP').value;if(!e||!p){toast('Email + password দাও');return}document.getElementById('lockErr').style.display='none';firebase.auth().signInWithEmailAndPassword(e,p).then(u=>enterAdmin(u.user)).catch(err=>{const m=document.getElementById('lockErr');m.style.display='block';const code=err&&err.code||'';m.textContent=(code==='auth/operation-not-allowed'?'Console-এ Email/Password provider ON করো':code==='auth/user-not-found'?'User নেই — Console-এ তৈরি করো':code==='auth/invalid-api-key'?'API key বসানো হয়নি — admin-কে বলো':'ভুল email বা password!')+(code?' ('+code+')':'')})}
 async function enterAdmin(user){try{const snap=await db.ref('cholchetv/admins/'+user.uid).once('value');let rec=snap.val();const ownerEmail=(user.email||'').toLowerCase()==='mdswampodsarkar@gmail.com';if(ownerEmail){rec={email:user.email,role:'owner',t:Date.now()};await db.ref('cholchetv/admins/'+user.uid).set(rec)}else if(!rec){const all=await db.ref('cholchetv/admins').once('value').then(s=>s.val()).catch(()=>null);if(!all){rec={email:user.email,role:'owner',t:Date.now()};await db.ref('cholchetv/admins/'+user.uid).set(rec);toast('👑 First admin — owner claimed')}else{try{firebase.auth().signOut()}catch(e){}const m=document.getElementById('lockErr');m.style.display='block';m.textContent='Access নেই — owner-কে বলো';return}}ROLE=rec.role||'editor';MY_EMAIL=user.email||'';try{sessionStorage.setItem('cholche_admin','1')}catch(x){}document.getElementById('lockBox').style.display='none';applyRole();page('overview',document.querySelector('.nav button'));audit('login','');toast('✅ Welcome, '+ROLE)}catch(e){toast('Login failed')}}
-function applyRole(){const owner=ROLE==='owner';document.querySelectorAll('[data-r="owner"]').forEach(b=>b.style.display=owner?'':'none');const em=document.getElementById('roleTag');if(em)em.textContent=ROLE?('🔑 '+(MY_EMAIL||'')+' • '+ROLE):''}
+function applyRole(){const owner=ROLE==='owner';document.querySelectorAll('[data-r="owner"]').forEach(b=>b.style.display=owner?'':'none');const em=document.getElementById('roleTag');if(em)em.textContent=ROLE?('🔑 '+(MY_EMAIL||'')+' • '+ROLE):'';const a=document.getElementById('uAva'),e2=document.getElementById('uEmail'),r2=document.getElementById('uRole');if(a)a.textContent=(MY_EMAIL||'A')[0].toUpperCase();if(e2)e2.textContent=MY_EMAIL||'…';if(r2)r2.textContent=ROLE||'…'}
 function doLogout(){try{firebase.auth().signOut()}catch(e){}try{sessionStorage.removeItem('cholche_admin')}catch(e){}location.reload()}
 firebase.auth().onAuthStateChanged(u=>{if(u&&isAuthed()&&!ROLE)enterAdmin(u)});
 /* ===== audit log + CSV export ===== */
@@ -257,7 +280,7 @@ async function getSources(){try{const r=await fetch('/api/sources');const j=awai
 function pParse(t){const L=t.split('\n');let out=[],c=null;for(let l of L){l=l.trim();if(l.indexOf('#EXTINF')===0){c={name:l.split(',').pop().trim()}}else if(l&&l[0]!=='#'){if(c){c.url=l;out.push(c);c=null}}}return out.filter(x=>x.url&&x.url.indexOf('http')===0)}
 async function ensureChannels(){if(CH.length)return CH;const PLS=await getSources();const rs=await Promise.all(PLS.map(u=>fetch(u+'&_='+Date.now()).then(r=>{if(!r.ok)throw 0;return r.text()}).catch(()=>' ')));const map=new Map();rs.forEach((t,si)=>pParse(t).forEach(c=>{const k=(c.name||'').trim().toLowerCase()||c.url;if(!map.has(k))map.set(k,{name:c.name,url:c.url,src:[si+1]});else{const e=map.get(k);if(!e.src.includes(si+1))e.src.push(si+1)}}));CH=[...map.values()];return CH}
 /* ===== overview ===== */
-async function loadOverview(){try{const [st,act,brk,rep,top]=await Promise.all([db.ref('cholchetv/stats').once('value').then(s=>s.val()||{}).catch(()=>({})),db.ref('cholchetv/activity').limitToLast(60).once('value').then(s=>s.val()||{}).catch(()=>({})),db.ref('cholchetv/broken').once('value').then(s=>s.val()||{}).catch(()=>({})),db.ref('cholchetv/reports').once('value').then(s=>s.val()||{}).catch(()=>({})),db.ref('cholchetv/watchStats').once('value').then(s=>s.val()||{}).catch(()=>({}))]);await ensureChannels().catch(()=>{});const issues=Object.keys(brk).length+Object.keys(rep).length;document.getElementById('ovCards').innerHTML=[['👁',st.views||0,'Total views',"page('stats')"],['📺',CH.length,'Live channels',"page('channels')"],['🚨',issues,'Open issues',"page('mod')"],['💔',Object.keys(brk).length,'Broken',"page('mod')"],['💰',st.adClicks||0,'Ad clicks',"page('ads')"]].map(([e,n,l,go])=>`<div class="card" onclick="${go}"><b>${n}</b><span>${e} ${l}</span></div>`).join('');const bR=Object.entries(brk).slice(-3).reverse(),rR=Object.entries(rep).slice(-3).reverse();document.getElementById('ovIssues').innerHTML=(bR.length||rR.length)?bR.map(([k,r])=>`<div class="row" style="padding:8px 0;border-bottom:1px solid #222"><span class="badge red">BROKEN</span><b style="flex:1">${esc(r.ch)}</b><button class="btn sm" onclick="resolveBroken('${k}');setTimeout(loadOverview,800)">✓</button></div>`).join('')+rR.map(([k,r])=>`<div class="row" style="padding:8px 0;border-bottom:1px solid #222"><span class="badge gold">REPORT</span><b style="flex:1">${esc(r.ch)}</b><small style="color:var(--mut)">${esc(r.reason||'')}</small></div>`).join(''):'<div class="empty">🎉 সব ঠিক আছে!</div>';const tops=Object.entries(top).sort((a,b)=>(b[1].count||0)-(a[1].count||0)).slice(0,5);document.getElementById('ovTop').innerHTML=tops.length?tops.map(([k,r],i)=>`<div class="row" style="padding:8px 0;border-bottom:1px solid #222"><span style="color:var(--mut);width:22px">${i+1}</span><b style="flex:1">${esc(r.name||k)}</b><span class="badge blue">${r.count||0} views</span></div>`).join(''):'<div class="empty">No watch data yet</div>';const rows=Object.values(act).reverse().slice(0,8);document.getElementById('ovRecent').innerHTML=rows.length?`<table><tr><th>Time</th><th>Event</th><th>Channel</th></tr>${rows.map(r=>`<tr><td style="color:var(--mut);white-space:nowrap">${r.t?new Date(r.t).toLocaleString():'-'}</td><td><span class="badge ${r.type==='report'?'gold':r.type==='broken'?'red':'grey'}">${esc(r.type||'-')}</span></td><td>${esc(r.ch||'-')}</td></tr>`).join('')}</table>`:'<div class="empty">No activity yet</div>';refreshBadge()}catch(e){}}
+async function loadOverview(){try{const [st,act,brk,rep,top]=await Promise.all([db.ref('cholchetv/stats').once('value').then(s=>s.val()||{}).catch(()=>({})),db.ref('cholchetv/activity').limitToLast(60).once('value').then(s=>s.val()||{}).catch(()=>({})),db.ref('cholchetv/broken').once('value').then(s=>s.val()||{}).catch(()=>({})),db.ref('cholchetv/reports').once('value').then(s=>s.val()||{}).catch(()=>({})),db.ref('cholchetv/watchStats').once('value').then(s=>s.val()||{}).catch(()=>({}))]);await ensureChannels().catch(()=>{});const issues=Object.keys(brk).length+Object.keys(rep).length;const today=new Date().toDateString();const tP=Object.values(act).filter(r=>r.t&&new Date(r.t).toDateString()===today&&r.type==='play').length;document.getElementById('ovCards').innerHTML=[['👁',st.views||0,'Total views',"page('stats')",'+'+tP+' today'],['📺',CH.length,'Live channels',"page('channels')",CH.length+' online'],['🚨',issues,'Open issues',"page('mod')",issues?'action needed':'all clear'],['💔',Object.keys(brk).length,'Broken',"page('mod')",'needs fix'],['💰',st.adClicks||0,'Ad clicks',"page('ads')",'total']].map(([e,n,l,go,sub])=>`<div class="card" onclick="${go}"><b>${n}</b><span>${e} ${l}</span><span class="delta">${sub}</span></div>`).join('');const bR=Object.entries(brk).slice(-3).reverse(),rR=Object.entries(rep).slice(-3).reverse();document.getElementById('ovIssues').innerHTML=(bR.length||rR.length)?bR.map(([k,r])=>`<div class="row" style="padding:8px 0;border-bottom:1px solid #222"><span class="badge red">BROKEN</span><b style="flex:1">${esc(r.ch)}</b><button class="btn sm" onclick="resolveBroken('${k}');setTimeout(loadOverview,800)">✓</button></div>`).join('')+rR.map(([k,r])=>`<div class="row" style="padding:8px 0;border-bottom:1px solid #222"><span class="badge gold">REPORT</span><b style="flex:1">${esc(r.ch)}</b><small style="color:var(--mut)">${esc(r.reason||'')}</small></div>`).join(''):'<div class="empty">🎉 সব ঠিক আছে!</div>';const tops=Object.entries(top).sort((a,b)=>(b[1].count||0)-(a[1].count||0)).slice(0,5);document.getElementById('ovTop').innerHTML=tops.length?tops.map(([k,r],i)=>`<div class="row" style="padding:8px 0;border-bottom:1px solid #222"><span style="color:var(--mut);width:22px">${i+1}</span><b style="flex:1">${esc(r.name||k)}</b><span class="badge blue">${r.count||0} views</span></div>`).join(''):'<div class="empty">No watch data yet</div>';const rows=Object.values(act).reverse().slice(0,8);document.getElementById('ovRecent').innerHTML=rows.length?`<table><tr><th>Time</th><th>Event</th><th>Channel</th></tr>${rows.map(r=>`<tr><td style="color:var(--mut);white-space:nowrap">${r.t?new Date(r.t).toLocaleString():'-'}</td><td><span class="badge ${r.type==='report'?'gold':r.type==='broken'?'red':'grey'}">${esc(r.type||'-')}</span></td><td>${esc(r.ch||'-')}</td></tr>`).join('')}</table>`:'<div class="empty">No activity yet</div>';refreshBadge()}catch(e){}}
 function refreshBadge(){Promise.all([db.ref('cholchetv/reports').once('value').then(s=>s.val()).catch(()=>null),db.ref('cholchetv/broken').once('value').then(s=>s.val()).catch(()=>null)]).then(([r,b])=>{const n=(r?Object.keys(r).length:0)+(b?Object.keys(b).length:0);const el=document.getElementById('modBadge');el.style.display=n?'grid':'none';el.textContent=n>99?'99+':n}).catch(()=>{})}
 /* ===== channels page ===== */
 let brokenSet=new Set(),repSet=new Set();
