@@ -236,6 +236,9 @@ function hideMaint(){const m=document.getElementById('mnt');if(m)m.style.display
 let ADS_ON=true,lastAdsOn=true;
 function applySettings(v){v=v||{};ADS_ON=v.adsEnabled!==false;const st=document.getElementById('pvStrip');if(st)st.style.display=ADS_ON?'flex':'none';if(ADS_ON!==lastAdsOn){lastAdsOn=ADS_ON;try{applyFilter()}catch(e){}}if(v.maintenance===true)showMaint();else hideMaint()}
 try{if(db)db.ref('cholchetv/settings').on('value',s=>{try{applySettings(s.val())}catch(e){}})}catch(e){}
+/* SDK flaky হলে REST fallback: 30s poll + tab focus-এ check (maintenance live থাকে) */
+function pollSettings(){try{fetch(DB_URL+'/cholchetv/settings.json').then(r=>r.json()).then(v=>{try{applySettings(v)}catch(e){}}).catch(()=>{})}catch(e){}}
+pollSettings();setInterval(pollSettings,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)pollSettings()});
 /* admin panel (Ad Links tab) -> site ads auto-update */
 try{if(db)db.ref('cholchetv/adLinks').once('value').then(s=>{const raw=s.val();const a=raw?(Array.isArray(raw)?raw:Object.values(raw)):[];const u=a.map(x=>typeof x==='string'?x:(x&&x.url)).filter(x=>x&&x.indexOf('http')===0);if(u.length)AD_LINKS=u}).catch(()=>{})}catch(e){}
 let all=[],filtered=[],idx=0,activeCat="All",view="home",hls=null,srv=0,liked=new Set();

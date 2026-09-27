@@ -149,6 +149,9 @@ function hideMaint(){const m=document.getElementById('mnt');if(m)m.style.display
 let ADS_ON=true;
 function applySettingsW(st){st=st||{};ADS_ON=st.adsEnabled!==false;['pvBan','pvSide'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=ADS_ON?'':'none'});if(st.maintenance===true)showMaint();else hideMaint()}
 try{if(db)db.ref('cholchetv/settings').on('value',s=>{try{applySettingsW(s.val())}catch(e){}})}catch(e){}
+/* SDK flaky হলে REST fallback: 30s poll + tab focus-এ check */
+function pollSettingsW(){try{fetch(DB_URL+'/cholchetv/settings.json').then(r=>r.json()).then(v=>{try{applySettingsW(v)}catch(e){}}).catch(()=>{})}catch(e){}}
+pollSettingsW();setInterval(pollSettingsW,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)pollSettingsW()});
 document.getElementById('pvBan').onclick=()=>{fbIncr('cholchetv/stats/adClicks');window.open(randAd(),'_blank')};
 document.getElementById('pvSide').onclick=()=>{fbIncr('cholchetv/stats/adClicks');window.open(randAd(),'_blank')};
 /* YouTube-style: overlay ad + 10-min mid-roll */
