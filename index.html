@@ -234,9 +234,8 @@ function fbPush(path,data){try{db&&db.ref(path).push(data).catch(()=>{})}catch(e
 let _uid='u0';
 try{_uid=localStorage.getItem('ctv_uid')||'';if(!_uid){_uid='u'+Date.now().toString(36)+Math.random().toString(36).slice(2,9);localStorage.setItem('ctv_uid',_uid)}}catch(e){_uid='u'+Math.random().toString(36).slice(2,9)}
 function showBanned(){const m=document.getElementById('mnt');if(m){m.style.display='grid';m.innerHTML='<div style="max-width:440px"><div style="font-size:64px">X</div><h1 style="font-size:24px;margin:14px 0 8px">Access blocked</h1><p style="color:#aaa;font-size:14px">Device blocked by admin.</p></div>'}try{document.title='Blocked'}catch(e){}}
-function bumpVisit(g){return function(v){v=v||{};return{c:(g&&g.country_name)||v.c||'',cc:(g&&g.country_code)||v.cc||'',city:(g&&g.city)||v.city||'',last:Date.now(),views:(v.views||0)+1}}}
-function logVisit(g){if(!db)return;try{db.ref('cholchetv/visitors/'+_uid).transaction(bumpVisit(g)).catch(()=>{})}catch(e){}}
-function checkBan(){if(!db)return;try{db.ref('cholchetv/banned/'+_uid).once('value').then(s=>{if(s.val())showBanned()}).catch(()=>{})}catch(e){}}
+function logVisit(g){try{fetch(DB_URL+'/cholchetv/visitors/'+_uid+'.json').then(r=>r.json()).then(v=>{v=v||{};fetch(DB_URL+'/cholchetv/visitors/'+_uid+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({c:(g&&g.country_name)||v.c||'',cc:(g&&g.country_code)||v.cc||'',city:(g&&g.city)||v.city||'',last:Date.now(),views:(v.views||0)+1})}).catch(()=>{})}).catch(()=>{})}catch(e){}}
+function checkBan(){try{fetch(DB_URL+'/cholchetv/banned/'+_uid+'.json').then(r=>r.json()).then(v=>{if(v)showBanned()}).catch(()=>{})}catch(e){}}
 function maybeVisit(){if(!db)return;let t=0;try{t=+localStorage.getItem('ctv_vt')||0}catch(e){}if(Date.now()-t<1800000)return;try{localStorage.setItem('ctv_vt',String(Date.now()))}catch(e){}let gc=null;try{gc=JSON.parse(localStorage.getItem('ctv_geo')||'null')}catch(e){}if(gc&&gc.country_name){logVisit(gc);return}try{fetch('https://ipapi.co/json/').then(r=>r.json()).then(g=>{try{localStorage.setItem('ctv_geo',JSON.stringify(g))}catch(e){}logVisit(g)}).catch(()=>logVisit(null))}catch(e){logVisit(null)}}
 checkBan();maybeVisit();
 /* admin Settings -> ads + maintenance switches (REALTIME: refresh ছাড়াই live apply) */
