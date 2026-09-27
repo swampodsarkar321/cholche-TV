@@ -223,7 +223,7 @@ footer{color:var(--mut);font-size:12px;padding:24px;text-align:center}
 <div id="toast"></div>
 
 <script>
-const PLAYLISTS=["/api/playlist?source=1","/api/playlist?source=2"];
+let PLAYLISTS=["/api/playlist?source=1","/api/playlist?source=2"];
 const AD_LINKS=["https://omg10.com/4/11270726","https://omg10.com/4/11273647","https://omg10.com/4/11270727","https://omg10.com/4/10664748","https://omg10.com/4/11269225"];
 const DB_URL="https://fram-and-go-default-rtdb.asia-southeast1.firebasedatabase.app";
 let db=null;try{if(window.firebase){firebase.initializeApp({databaseURL:DB_URL});db=firebase.database()}}catch(e){}
@@ -310,6 +310,6 @@ document.getElementById('q').addEventListener('input',applyFilter);
 /* polite adblock notice (never blocks playback) */
 try{if(!sessionStorage.getItem('abn')){const b=document.createElement('div');b.className='adsbox';b.style.cssText='height:1px;width:1px;position:absolute;left:-99px;top:0';document.body.appendChild(b);setTimeout(()=>{let blocked=false;try{blocked=getComputedStyle(b).display==='none'||b.offsetHeight===0&&b.offsetParent===null}catch(e){blocked=true}try{b.remove()}catch(e){}if(blocked){const n=document.getElementById('abNote');if(n)n.style.display='flex'}try{sessionStorage.setItem('abn','1')}catch(e){}},1500)}}catch(e){}
 /* instant boot: show last channels immediately, refresh in background */
-(function(){try{const s=JSON.parse(localStorage.getItem('cholche_cache3')||'null');if(s&&s.data&&s.data.length&&Date.now()-s.t<864e5){all=s.data;buildCats();buildSideCats();applyFilter();hideLoader()}}catch(e){}fetchPlaylist()})();
+(async()=>{try{const r=await Promise.race([fetch('/api/sources'),new Promise((_,rj)=>setTimeout(()=>rj(0),3000))]);const j=await r.json();if(j&&j.sources&&j.sources.length)PLAYLISTS=j.sources.map(s=>'/api/playlist?source='+s)}catch(e){}try{const s=JSON.parse(localStorage.getItem('cholche_cache3')||'null');if(s&&s.data&&s.data.length&&Date.now()-s.t<864e5){all=s.data;buildCats();buildSideCats();applyFilter();hideLoader()}}catch(e){}fetchPlaylist()})();
 </script>
 </body></html>

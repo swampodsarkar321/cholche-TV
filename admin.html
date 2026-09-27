@@ -42,23 +42,46 @@ input:focus{border-color:var(--blue)}
 .empty{color:var(--mut);text-align:center;padding:30px;font-size:14px}
 #toast{position:fixed;bottom:26px;left:26px;background:#f1f1f1;color:#000;padding:13px 22px;border-radius:8px;font-size:14px;z-index:400;transform:translateY(80px);transition:.3s}
 #toast.show{transform:none}
+#lockBox{position:fixed;inset:0;background:#0f0f0f;z-index:500;display:flex;align-items:center;justify-content:center;padding:16px}
+#lockBox .box{background:var(--bg3);border:1px solid var(--line);border-radius:16px;padding:28px;width:min(380px,94vw);text-align:center}
 </style>
 </head>
 <body>
+<div id="lockBox"><div class="box">
+<div style="font-size:44px">🔐</div>
+<h2 style="margin:10px 0 4px">Admin Login</h2>
+<p style="color:var(--mut);font-size:13px;margin-bottom:14px">Cholche TV Control Panel</p>
+<input id="admE" type="email" placeholder="Admin email" style="width:100%;margin-bottom:10px">
+<input id="admP" type="password" placeholder="Password" style="width:100%;margin-bottom:12px" onkeydown="if(event.key==='Enter')doLogin()">
+<button class="btn pri" style="width:100%" onclick="doLogin()">Login →</button>
+<p id="lockErr" style="color:#f87171;font-size:13px;margin-top:10px;display:none">ভুল email বা password!</p>
+</div></div>
 <header class="mast">
 <div class="yt-logo" onclick="location.href='index.html'"><img src="logo.png" alt="">Cholche TV</div>
 <div style="width:1px;height:28px;background:var(--line)"></div>
 <div class="tab on" data-t="dash" onclick="tab('dash',this)">📊 Dashboard</div>
+<div class="tab" data-t="pls" onclick="tab('pls',this)">🎬 Playlists</div>
 <div class="tab" data-t="ads" onclick="tab('ads',this)">💰 Ad Links</div>
 <div class="tab" data-t="reports" onclick="tab('reports',this)">⚠ Reports</div>
+<div class="tab" data-t="broken" onclick="tab('broken',this)">💔 Broken</div>
 <div class="tab" data-t="stats" onclick="tab('stats',this)">📈 Stats</div>
+<div style="margin-left:auto"></div>
+<button class="btn sm" onclick="doLogout()">Logout</button>
 </header>
 <div class="wrap">
 <div id="view-dash"><div class="cards" id="statCards"></div><div class="sec"><h2>🕐 Recent activity</h2><div id="recent"></div></div></div>
+<div id="view-pls" style="display:none"><div class="sec"><h2>🎬 Playlist Sources</h2>
+<p style="color:var(--mut);font-size:13px;margin-bottom:12px">Website প্রতি 2 min-এ auto-sync করে — restart লাগে না। Source 1 = default server।</p>
+<div class="row" style="margin-bottom:14px"><input id="newPl" placeholder="https://…m3u / .m3u8" style="flex:1;min-width:200px"><button class="btn pri" onclick="addPl()">+ Add</button></div>
+<div id="plList"></div></div></div>
 <div id="view-ads" style="display:none"><div class="sec"><h2>💰 Ad Links</h2>
 <div class="row" style="margin-bottom:14px"><input id="newAd" placeholder="https://…" style="flex:1;min-width:200px"><button class="btn pri" onclick="addAd()">+ Add</button></div>
 <div id="adList"></div></div></div>
-<div id="view-reports" style="display:none"><div class="sec"><h2>⚠ Channel Reports</h2><div id="repList"></div></div></div>
+<div id="view-reports" style="display:none"><div class="sec"><h2>⚠ Channel Reports (user পাঠানো)</h2><div id="repList"></div></div></div>
+<div id="view-broken" style="display:none"><div class="sec"><h2>💔 Broken Channels (auto-check)</h2>
+<p style="color:var(--mut);font-size:13px;margin-bottom:12px" id="brokenMeta">Server প্রতি 30 min-এ সব channel test করে।</p>
+<div class="row" style="margin-bottom:14px"><button class="btn pri" onclick="loadBroken(true)">🔍 Refresh check</button></div>
+<div id="brokenList"><div class="empty">Loading…</div></div></div></div>
 <div id="view-stats" style="display:none"><div class="sec"><h2>📈 Most watched</h2><div id="watchList"></div></div></div>
 </div>
 <div id="toast"></div>
@@ -67,18 +90,28 @@ const DB_URL="https://fram-and-go-default-rtdb.asia-southeast1.firebasedatabase.
 firebase.initializeApp({databaseURL:DB_URL});
 const db=firebase.database();
 let toastT=null;const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)};
-function tab(t,el){document.querySelectorAll('.mast .tab').forEach(x=>x.classList.remove('on'));el.classList.add('on');['dash','ads','reports','stats'].forEach(v=>document.getElementById('view-'+v).style.display=v===t?'':'none');if(t==='ads')loadAds();if(t==='reports')loadReps();if(t==='stats')loadStats();if(t==='dash')loadDash()}
+/* ===== admin gate (basic screen — page source-এ visible, Firebase Auth লাগলে বলো) ===== */
+const _AE='mdswa'+'mpodsarkar@'+'gmail.com',_AP='123'+'456';
+function isAuthed(){try{return sessionStorage.getItem('cholche_admin')==='1'}catch(e){return false}}
+function doLogin(){const e=document.getElementById('admE').value.trim().toLowerCase(),p=document.getElementById('admP').value;if(e===_AE&&p===_AP){try{sessionStorage.setItem('cholche_admin','1')}catch(x){}document.getElementById('lockBox').style.display='none';document.getElementById('lockErr').style.display='none';loadDash();toast('✅ Welcome back!')}else{document.getElementById('lockErr').style.display='block'}}
+function doLogout(){try{sessionStorage.removeItem('cholche_admin')}catch(e){}location.reload()}
+function tab(t,el){document.querySelectorAll('.mast .tab').forEach(x=>x.classList.remove('on'));el.classList.add('on');['dash','pls','ads','reports','broken','stats'].forEach(v=>document.getElementById('view-'+v).style.display=v===t?'':'none');if(t==='ads')loadAds();if(t==='reports')loadReps();if(t==='broken')loadBroken(false);if(t==='stats')loadStats();if(t==='dash')loadDash();if(t==='pls')loadPls()}
+/* playlists: add/remove -> Firebase -> website auto-sync (2 min) */
+function loadPls(){db.ref('cholchetv/playlists').once('value').then(s=>{const v=s.val()||[];document.getElementById('plList').innerHTML=v.length?`<table><tr><th>#</th><th>Source URL</th><th></th></tr>${v.map((u,i)=>`<tr><td style="color:var(--mut)">S${i+1}</td><td><span class="link">${String(u).slice(0,70)}…</span></td><td><button class="btn sm danger" onclick="delPl(${i})">✕</button></td></tr>`).join('')}</table>`:'<div class="empty">No sources yet</div>'}).catch(()=>toast('Failed'))}
+function addPl(){const u=document.getElementById('newPl').value.trim();if(!u||!u.startsWith('http')){toast('Valid URL দাও');return}db.ref('cholchetv/playlists').once('value').then(s=>{const v=s.val()||[];if(v.includes(u)){toast('Already added');return}v.push(u);db.ref('cholchetv/playlists').set(v).then(()=>{document.getElementById('newPl').value='';loadPls();toast('✅ Added — 2 min-এ site-এ আসবে')})}).catch(()=>toast('Failed'))}
+function delPl(i){if(!confirm('Source '+(i+1)+' remove করবো?'))return;db.ref('cholchetv/playlists').once('value').then(s=>{const v=s.val()||[];v.splice(i,1);db.ref('cholchetv/playlists').set(v).then(()=>{loadPls();toast('Removed')})}).catch(()=>toast('Failed'))}
 /* dashboard */
 function loadDash(){db.ref('cholchetv/stats').once('value').then(s=>{const v=s.val()||{};document.getElementById('statCards').innerHTML=[['Total Views',v.views||0,''],['Unique Channels',v.channels||0,''],['Reports',v.reports||0,''],['Ad Clicks',v.adClicks||0,'']].map(([l,n])=>`<div class="card"><b>${n}</b><span>${l}</span></div>`).join('')}).catch(()=>{});db.ref('cholchetv/activity').limitToLast(10).once('value').then(s=>{const v=s.val()||{};const rows=Object.values(v).reverse();document.getElementById('recent').innerHTML=rows.length?`<table><tr><th>Time</th><th>Event</th><th>Channel</th></tr>${rows.map(r=>`<tr><td style="color:var(--mut)">${new Date(r.t).toLocaleString()}</td><td>${r.type}</td><td>${r.ch||'-'}</td></tr>`).join('')}</table>`:'<div class="empty">No activity yet</div>'}).catch(()=>{})}
 /* ads */
 function loadAds(){db.ref('cholchetv/adLinks').once('value').then(s=>{const v=s.val()||[];document.getElementById('adList').innerHTML=v.length?`<table><tr><th>#</th><th>Link</th><th>Clicks</th><th></th></tr>${v.map((a,i)=>`<tr><td>${i+1}</td><td><a class="link" href="${a.url}" target="_blank">${a.url.slice(0,60)}…</a></td><td>${a.clicks||0}</td><td><button class="btn sm danger" onclick="delAd(${i})">✕</button></td></tr>`).join('')}</table>`:'<div class="empty">No ad links yet</div>'}).catch(()=>{})}
 function addAd(){const u=document.getElementById('newAd').value.trim();if(!u||!u.startsWith('http')){toast('Valid URL দাও');return}db.ref('cholchetv/adLinks').push({url:u,clicks:0}).then(()=>{document.getElementById('newAd').value='';loadAds();toast('✅ Ad link added')}).catch(()=>toast('Failed'))}
 function delAd(i){db.ref('cholchetv/adLinks').once('value').then(s=>{const v=s.val()||[];const k=Object.keys(s.val()||{})[i];if(k)db.ref('cholchetv/adLinks/'+k).remove().then(()=>{loadAds();toast('Removed')})}).catch(()=>{})}
-/* reports */
+/* auto broken-channel list (server tested, with names) */
+function loadBroken(fresh){if(fresh)toast('🔍 Checking… 1-2 min লাগতে পারে');fetch('/api/health'+(fresh?'?fresh=1':'')).then(r=>r.json()).then(h=>{const d=h.dead||[];document.getElementById('brokenMeta').textContent=h.t?`Last check: ${new Date(h.t*1000).toLocaleString()} • OK ${h.ok}/${h.total} • Broken ${d.length}`:'এখনো check হয়নি — Refresh চাপো';document.getElementById('brokenList').innerHTML=!h.t?'<div class="empty">এখনো check হয়নি — Refresh চাপো</div>':d.length?`<table><tr><th>#</th><th>Channel</th><th>Src</th><th>Reason</th></tr>${d.map((r,i)=>`<tr><td style="color:var(--mut)">${i+1}</td><td>${r.name}</td><td><span class="badge blue">${r.src}</span></td><td><span class="badge red">${r.reason}</span></td></tr>`).join('')}</table>`:'<div class="empty">🎉 সব channel ঠিক আছে!</div>'}).catch(()=>{document.getElementById('brokenList').innerHTML='<div class="empty">Load failed</div>'})}
 function loadReps(){db.ref('cholchetv/reports').once('value').then(s=>{const v=s.val()||{};const rows=Object.values(v);document.getElementById('repList').innerHTML=rows.length?`<table><tr><th>Time</th><th>Channel</th><th>Reason</th><th></th></tr>${rows.reverse().map((r,i)=>`<tr><td style="color:var(--mut)">${new Date(r.t).toLocaleString()}</td><td>${r.ch}</td><td><span class="badge gold">${r.reason}</span></td><td><button class="btn sm danger" onclick="resolveRep(${i})">✓</button></td></tr>`).join('')}</table>`:'<div class="empty">No reports — সব channel ঠিক আছে!</div>'}).catch(()=>{})}
 function resolveRep(i){db.ref('cholchetv/reports').once('value').then(s=>{const k=Object.keys(s.val()||{})[i];if(k)db.ref('cholchetv/reports/'+k).remove().then(()=>{loadReps();toast('Resolved ✓')})}).catch(()=>{})}
 /* stats */
 function loadStats(){db.ref('cholchetv/watchStats').once('value').then(s=>{const v=s.val()||{};const rows=Object.entries(v).sort((a,b)=>(b[1].count||0)-(a[1].count||0)).slice(0,30);document.getElementById('watchList').innerHTML=rows.length?`<table><tr><th>#</th><th>Channel</th><th>Views</th><th>Last</th></tr>${rows.map(([k,r],i)=>`<tr><td style="color:var(--mut)">${i+1}</td><td>${r.name||k}</td><td><span class="badge blue">${r.count||0}</span></td><td style="color:var(--mut)">${r.last?new Date(r.last).toLocaleString():'-'}</td></tr>`).join('')}</table>`:'<div class="empty">No watch data yet</div>'}).catch(()=>{})}
-loadDash();
+if(isAuthed()){document.getElementById('lockBox').style.display='none';loadDash();}
 </script>
 </body></html>

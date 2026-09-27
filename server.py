@@ -36,15 +36,31 @@ def fresh_url(bid):
     except Exception:
         pass
     return None
-# fetch playlist URLs from Firebase at startup (store base IDs so tokens auto-refresh)
-try:
-    cfg = fb_get("cholchetv/playlists")
-    URLS = {f"/pl{i+1}.m3u": u for i, u in enumerate(cfg) if u}
-    IDS = {p: base_id_of(u) for p, u in URLS.items()}
-except Exception:
-    URLS = {}
-    IDS = {}
+# fetch playlist URLs from Firebase (store base IDs so tokens auto-refresh)
+URLS = {}
+IDS = {}
 CACHE = {}  # path -> (fresh_url, timestamp)
+PL_CACHE = {}   # path -> (bytes, timestamp)
+PL_TTL = 300    # serve instantly if fresher than this
+def sync_playlists():
+    # re-read admin config: add new sources, drop removed ones (auto-sync, no restart)
+    global URLS, IDS
+    try:
+        cfg = fb_get("cholchetv/playlists")
+        new_urls = {f"/pl{i+1}.m3u": u for i, u in enumerate(cfg) if u}
+    except Exception:
+        return
+    for p in list(URLS):
+        if p not in new_urls:
+            URLS.pop(p, None); IDS.pop(p, None); PL_CACHE.pop(p, None); CACHE.pop(p, None)
+    for p, u in new_urls.items():
+        if URLS.get(p) != u:
+            URLS[p] = u; IDS[p] = base_id_of(u)
+            try:
+                PL_CACHE[p] = (fetch_playlist(p), time.time())
+            except Exception:
+                pass
+sync_playlists()
 def resolve_url(path):
     bid = IDS.get(path)
     now = time.time()
@@ -73,8 +89,6 @@ def fetch_playlist(path):
         raise ValueError("upstream playlist expired")
     return data
 # ---- preload: all channels ready in memory before first visitor ----
-PL_CACHE = {}   # path -> (bytes, timestamp)
-PL_TTL = 300    # serve instantly if fresher than this
 def get_cached_playlist(path):
     now = time.time()
     if path in PL_CACHE and now - PL_CACHE[path][1] < PL_TTL:
@@ -90,6 +104,7 @@ def get_cached_playlist(path):
 def refresh_loop():
     while True:
         time.sleep(120)
+        sync_playlists()  # admin changes auto-sync, no restart needed
         with ThreadPoolExecutor(max_workers=4) as _ex:
             list(_ex.map(_warm_one, list(URLS)))
 def _warm_one(p):
@@ -100,8 +115,87 @@ def _warm_one(p):
 with ThreadPoolExecutor(max_workers=4) as _ex0:  # parallel warm: first load instant
     list(_ex0.map(_warm_one, list(URLS)))
 threading.Thread(target=refresh_loop, daemon=True).start()
-def proxify_m3u8(text, base):
-    # rewrite segment/key URIs to absolute + routed via proxy (keeps headers + tokens working)
+# ---- auto broken-channel detector (for admin panel) ----
+HEALTH = {"t": 0, "total": 0, "ok": 0, "dead": []}
+HEALTH_RUNNING = False
+def parse_health(t):
+    out, cur = [], None
+    for l in t.splitlines():
+        l = l.strip()
+        if l.startswith("#EXTINF"):
+            cur = {"name": l.split(",").pop().strip(), "url": None}
+        elif l and not l.startswith("#"):
+            if cur:
+                cur["url"] = l
+                out.append(cur)
+                cur = None
+    return [c for c in out if c["url"] and c["url"].lower().startswith("http") and ".mpd" not in c["url"].lower()]
+def check_one(u):
+    try:
+        body = urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=12).read()
+    except urllib.error.HTTPError as e:
+        return False, "m3u8:%s" % e.code
+    except Exception:
+        return False, "m3u8:ERR"
+    try:
+        t = body.decode("utf-8", "ignore")
+    except Exception:
+        return False, "m3u8:dec"
+    if "#EXT" not in t:
+        return False, "m3u8:noext"
+    lines = [l.strip() for l in t.splitlines() if l.strip() and not l.strip().startswith("#")]
+    if not lines:
+        return False, "m3u8:empty"
+    first = urllib.parse.urljoin(u, lines[0])
+    if ".m3u8" in urllib.parse.urlparse(first).path:
+        try:
+            b2 = urllib.request.urlopen(urllib.request.Request(first, headers=UA), timeout=12).read().decode("utf-8", "ignore")
+        except urllib.error.HTTPError as e:
+            return False, "variant:%s" % e.code
+        except Exception:
+            return False, "variant:ERR"
+        l2 = [l.strip() for l in b2.splitlines() if l.strip() and not l.strip().startswith("#")]
+        if not l2:
+            return False, "variant:empty"
+        first = urllib.parse.urljoin(first, l2[0])
+    try:
+        r = urllib.request.urlopen(urllib.request.Request(first, headers=UA), timeout=12)
+        r.close()
+        return True, "ok"
+    except urllib.error.HTTPError as e:
+        return False, "seg:%s" % e.code
+    except Exception:
+        return False, "seg:ERR"
+def health_run():
+    global HEALTH, HEALTH_RUNNING
+    if HEALTH_RUNNING:
+        return
+    HEALTH_RUNNING = True
+    try:
+        jobs, seen = [], set()
+        for p in list(URLS):
+            try:
+                data = get_cached_playlist(p)
+            except Exception:
+                continue
+            for c in parse_health(data.decode("utf-8", "ignore")):
+                if c["url"] not in seen:
+                    seen.add(c["url"])
+                    jobs.append((p, c))
+        with ThreadPoolExecutor(max_workers=10) as ex:
+            res = list(ex.map(lambda j: (j[0], j[1],) + check_one(j[1]["url"]), jobs))
+        dead = [{"name": c["name"], "src": p.replace("/pl", "S").replace(".m3u", ""), "url": c["url"], "reason": r}
+                for (p, c, ok, r) in res if not ok]
+        HEALTH = {"t": int(time.time()), "total": len(res),
+                  "ok": sum(1 for r in res if r[2]), "dead": dead}
+    except Exception:
+        pass
+    HEALTH_RUNNING = False
+def health_loop():
+    while True:
+        time.sleep(1800)
+        health_run()
+def proxify_m3u8(text, base):    # rewrite segment/key URIs to absolute + routed via proxy (keeps headers + tokens working)
     import re as _re
     out = []
     for line in text.splitlines():
@@ -151,16 +245,46 @@ class H(SimpleHTTPRequestHandler):
                 data = get_retry(q)
             except Exception:
                 self.send_response(502); self.end_headers(); return
-            if ".m3u8" in pr.path:
+            if ".m3u8" in pr.path or ".m3u" in pr.path or q and ".m3u8" in urllib.parse.urlparse(q).path:
                 try:
                     return self.send_bin(proxify_m3u8(data.decode("utf-8", "ignore"), q), "application/vnd.apple.mpegurl")
                 except Exception:
                     pass
-            ctype = "video/MP2T" if pr.path.endswith(".ts") else "application/octet-stream"
+            ctype = "video/MP2T" if (pr.path.endswith(".ts") or (q and urllib.parse.urlparse(q).path.endswith(".ts"))) else "application/octet-stream"
             try:
                 return self.send_bin(data, ctype)
             except Exception:
                 self.send_response(502); self.end_headers(); return
+        if path == "/api/health":
+            q = urllib.parse.parse_qs(p.query)
+            if "fresh" in q and not HEALTH_RUNNING and time.time() - HEALTH.get("t", 0) > 60:
+                threading.Thread(target=health_run, daemon=True).start()
+            try:
+                body = json.dumps(HEALTH).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            except Exception:
+                self.send_response(502); self.end_headers()
+            return
+        if path == "/api/sources":
+            try:
+                nums = sorted(p[3:-4] for p in URLS if p.startswith("/pl") and p.endswith(".m3u"))
+                body = json.dumps({"sources": nums}).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            except Exception:
+                self.send_response(502); self.end_headers()
+            return
         if path == "/api/playlist":
             source = urllib.parse.parse_qs(p.query).get("source", [""])[0]
             path = f"/pl{source}.m3u"
@@ -177,4 +301,6 @@ class H(SimpleHTTPRequestHandler):
                 self.send_response(502); self.end_headers(); return
         return super().do_GET()
     def log_message(self, *a): pass
+threading.Thread(target=health_run, daemon=True).start()  # first broken-check in background
+threading.Thread(target=health_loop, daemon=True).start()
 ThreadingHTTPServer(("127.0.0.1", 8090), H).serve_forever()
