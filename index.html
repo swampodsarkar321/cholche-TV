@@ -12,6 +12,7 @@
 <link rel="canonical" href="http://localhost:8090/">
 <meta property="og:image" content="logo.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Cholche TV","url":"http://localhost:8090/","potentialAction":{"@type":"SearchAction","target":"http://localhost:8090/?q={query}","query-input":"required name=query"}}</script>
+<script defer src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -129,6 +130,7 @@ video{width:100%;aspect-ratio:16/9;display:block;background:#000}
 .vcard .th{position:relative;border-radius:12px;overflow:hidden;background:#1c1c1c;aspect-ratio:16/9;display:grid;place-items:center;font-size:52px}
 .vcard .th img{width:100%;height:100%;object-fit:contain;background:#fff;padding:12px;position:absolute;inset:0}
 .vcard:hover .th{border-radius:0}
+.vcard .th video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;background:#000;pointer-events:none}
 .vcard .live{position:absolute;bottom:8px;right:8px;background:#c00;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:6px}
 .vcard .srv{position:absolute;top:8px;left:8px;background:#ffb700;color:#000;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:6px}
 .vmeta{display:flex;gap:11px;margin-top:11px}
@@ -271,9 +273,15 @@ function applyFilter(){const q=document.getElementById('q').value.toLowerCase();
 function emojiFor(n){n=n.toLowerCase();if(n.includes('sport')||n.includes('cricket'))return'⚽';if(n.includes('news'))return'📰';if(n.includes('movie')||n.includes('hbo')||n.includes('film'))return'🎬';if(n.includes('music')||n.includes('g-series')||n.includes('gaan'))return'🎵';if(n.includes('kid')||n.includes('toon'))return'🧸';if(n.includes('star'))return'🌟';if(n.includes('bangla')||n.includes('atn')||n.includes('somoy'))return'🇧🇩';return'📺'}
 /* ---------- cards ---------- */
 function thumb(c){return `<img src="logo.png" alt="${c.name}" loading="lazy">`}
-function vcard(c){const i=all.indexOf(c);return`<div class="vcard" onclick="openCh(${i})"><div class="th">${thumb(c)}${c.urls.length>1?`<span class="srv">${c.urls.length} SERVERS</span>`:''}<span class="live">● LIVE</span></div><div class="vmeta"><div class="cava"><img src="logo.png" alt="" loading="lazy"></div><div style="min-width:0"><b>${c.name}</b><small>${c.group} ✓</small><small><span class="vw">${(Math.random()*40+2).toFixed(1)}K</span> watching • HD</small></div></div></div>`}
+function vcard(c){const i=all.indexOf(c);return`<div class="vcard" onclick="openCh(${i})" onmouseenter="pvEnter(this,${i})" onmouseleave="pvLeave()"><div class="th">${thumb(c)}${c.urls.length>1?`<span class="srv">${c.urls.length} SERVERS</span>`:''}<span class="live">● LIVE</span></div><div class="vmeta"><div class="cava"><img src="logo.png" alt="" loading="lazy"></div><div style="min-width:0"><b>${c.name}</b><small>${c.group} ✓</small><small><span class="vw">${(Math.random()*40+2).toFixed(1)}K</span> watching • HD</small></div></div></div>`}
 /* YouTube-style in-feed sponsored card */
 function adCard(){const u=AD_LINKS[Math.floor(Math.random()*AD_LINKS.length)];return`<div class="vcard" onclick="window.open('${u}','_blank')"><div class="th" style="background:linear-gradient(135deg,#1a1030,#0f2a3a);font-size:44px">📢<span class="srv" style="background:#fabb00">SPONSORED</span></div><div class="vmeta"><div class="cava">💰</div><div style="min-width:0"><b>Sponsored — Special Offer</b><small>Advertisement</small><small style="color:#fabb00">Visit site →</small></div></div></div>`}
+/* YouTube-style hover preview: one muted live preview at a time (desktop only) */
+let pvH=null,pvT=null,pvEl=null;const canHover=window.matchMedia&&matchMedia('(hover:hover)').matches;
+function pvEnter(el,i){if(!canHover||!window.Hls||!window.Hls.isSupported())return;pvLeave();pvT=setTimeout(()=>{try{const c=all[i];if(!c||!c.urls||!c.urls[0])return;const u=c.urls[0];if(u.indexOf('m3u8')<0)return;const th=el.querySelector('.th');if(!th)return;pvEl=th;const v=document.createElement('video');v.muted=true;v.playsInline=true;v.style.cssText='width:100%;height:100%;object-fit:cover;position:absolute;inset:0;background:#000;pointer-events:none';th.appendChild(v);pvH=new Hls({maxBufferLength:10});pvH.loadSource(u);pvH.attachMedia(v);pvH.on(Hls.Events.ERROR,()=>pvKill());try{const p=v.play();if(p&&p.catch)p.catch(()=>pvKill())}catch(e){pvKill()}}catch(e){pvKill()}},700)}
+function pvLeave(){clearTimeout(pvT);pvKill()}
+function pvKill(){try{if(pvH){pvH.destroy();pvH=null}}catch(e){}try{if(pvEl){const v=pvEl.querySelector('video');if(v)v.remove();pvEl=null}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pvKill()});
 let shown=60;
 function render(){
 /* HOME = শুধু channel grid */
