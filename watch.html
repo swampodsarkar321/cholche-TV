@@ -62,6 +62,8 @@ video{width:100%;aspect-ratio:16/9;display:block;background:#000}
 </style>
 </head>
 <body>
+<!-- MAINTENANCE MODE -->
+<div id="mnt" style="position:fixed;inset:0;z-index:999;display:none;place-items:center;background:radial-gradient(1000px 600px at 50% -10%,#232a4d,#0f0f0f 70%);text-align:center;padding:20px"><div style="max-width:440px"><div style="font-size:64px">🔧</div><div style="display:inline-block;background:#fabb00;color:#000;font-size:11px;font-weight:700;padding:4px 12px;border-radius:99px;margin:14px 0 10px;letter-spacing:1px">MAINTENANCE</div><h1 style="font-size:26px;margin:0 0 8px">সাইট এখন maintenance-এ আছে</h1><p style="color:#aaa;font-size:14px;margin:0 0 6px">আরো ভালো experience নিয়ে ফিরছি — একটু পরে আবার এসো ❤️</p><p style="color:#666;font-size:12px">Cholche TV • We'll be back soon</p></div></div>
 <header class="mast"><div class="yt-logo" onclick="location.href='index.html'"><img src="logo.png" alt="Cholche TV" style="width:38px;height:38px;border-radius:10px;object-fit:cover">Cholche TV</div>
 <div style="margin-left:auto;color:var(--mut);font-size:13px" id="cnt"></div></header>
 <div class="wrap">
@@ -141,8 +143,9 @@ let AD_LINKS=["https://omg10.com/4/11270726","https://omg10.com/4/11273647","htt
 const randAd=()=>AD_LINKS[Math.floor(Math.random()*AD_LINKS.length)];
 /* admin panel (Ad Links tab) -> site ads auto-update */
 try{if(db)db.ref('cholchetv/adLinks').once('value').then(s=>{const raw=s.val();const a=raw?(Array.isArray(raw)?raw:Object.values(raw)):[];const u=a.map(x=>typeof x==='string'?x:(x&&x.url)).filter(x=>x&&x.indexOf('http')===0);if(u.length)AD_LINKS=u}).catch(()=>{})}catch(e){}
-/* admin Settings -> ads master switch */
-let ADS_ON=true;try{if(db)db.ref('cholchetv/settings/adsEnabled').once('value').then(s=>{if(s.val()===false){ADS_ON=false;['pvBan','pvSide'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none'})}}).catch(()=>{})}catch(e){}
+/* admin Settings -> ads + maintenance switches */
+function showMaint(){try{v.pause()}catch(e){}const m=document.getElementById('mnt');if(m)m.style.display='grid';try{document.title='Maintenance — Cholche TV'}catch(e){}}
+let ADS_ON=true;try{if(db)db.ref('cholchetv/settings').once('value').then(s=>{const set=s.val()||{};if(set.adsEnabled===false){ADS_ON=false;['pvBan','pvSide'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none'})}if(set.maintenance===true)showMaint()}).catch(()=>{})}catch(e){}
 document.getElementById('pvBan').onclick=()=>{fbIncr('cholchetv/stats/adClicks');window.open(randAd(),'_blank')};
 document.getElementById('pvSide').onclick=()=>{fbIncr('cholchetv/stats/adClicks');window.open(randAd(),'_blank')};
 /* YouTube-style: overlay ad + 10-min mid-roll */
