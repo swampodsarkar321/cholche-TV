@@ -2,33 +2,49 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin — Cholche TV</title>
+<title>Studio — Cholche TV</title>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0f0f0f;--bg3:#272727;--line:#3d3d3d;--txt:#f1f1f1;--mut:#aaa;--red:#f03;--green:#4ade80;--blue:#60a5fa;--gold:#fabb00}
+:root{--bg:#0f0f0f;--bg2:#171717;--bg3:#272727;--line:#3d3d3d;--txt:#f1f1f1;--mut:#aaa;--red:#f03;--green:#4ade80;--blue:#60a5fa;--gold:#fabb00}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--txt);font-family:Roboto,'Hind Siliguri',sans-serif;min-height:100vh}
-.mast{display:flex;align-items:center;gap:14px;padding:0 16px;height:60px;background:var(--bg);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50}
-.yt-logo{display:flex;align-items:center;gap:8px;font-weight:900;font-size:18px;cursor:pointer}
-.yt-logo img{width:34px;height:34px;border-radius:9px}
-.mast .tab{padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;color:var(--mut)}
-.mast .tab.on{background:var(--bg3);color:#fff}
-.mast .tab:hover{color:#fff}
-.wrap{max-width:1100px;margin:auto;padding:24px 20px 60px}
-.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}
-@media(max-width:700px){.cards{grid-template-columns:repeat(2,1fr)}}
-.card{background:var(--bg3);border-radius:12px;padding:18px}
-.card b{font-size:28px;display:block}.card span{color:var(--mut);font-size:12.5px}
-.sec{margin:22px 0}
-.sec h2{font-size:17px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.app{display:flex;min-height:100vh}
+/* ===== SIDEBAR ===== */
+.side{width:238px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--line);padding:16px 12px;position:sticky;top:0;height:100vh;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:900;font-size:17px;padding:6px 10px 16px;cursor:pointer}
+.brand img{width:34px;height:34px;border-radius:9px}
+.brand small{display:block;font-size:10px;color:var(--mut);font-weight:400;letter-spacing:1px}
+.nav button{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;color:var(--mut);padding:11px 12px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;text-align:left}
+.nav button:hover{background:var(--bg3);color:#fff}
+.nav button.on{background:var(--bg3);color:#fff}
+.nav button .ic{font-size:17px;width:22px;text-align:center}
+.nbadge{margin-left:auto;background:var(--red);color:#fff;font-size:11px;font-weight:700;min-width:22px;height:22px;border-radius:99px;display:grid;place-items:center;padding:0 6px}
+.side .foot{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+/* ===== MAIN ===== */
+.main{flex:1;min-width:0;padding:0 26px 70px}
+.topbar{position:sticky;top:0;background:var(--bg);z-index:40;padding:18px 0 12px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.topbar h1{font-size:20px;font-weight:700}
+.live-dot{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--mut)}
+.live-dot i{width:9px;height:9px;border-radius:99px;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 2s infinite}
+@keyframes blink{50%{opacity:.4}}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.card{background:var(--bg3);border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;transition:.15s}
+.card:hover{border-color:#555;transform:translateY(-2px)}
+.card b{font-size:26px;display:block}.card span{color:var(--mut);font-size:12.5px}.card .em{font-size:20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.sec{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px}
+.sec h2{font-size:15.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.sec .sub{color:var(--mut);font-size:12.5px;margin-bottom:12px}
+.tblwrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
-th{text-align:left;padding:10px 12px;color:var(--mut);font-weight:500;border-bottom:1px solid var(--line)}
-td{padding:10px 12px;border-bottom:1px solid #222}
+th{text-align:left;padding:9px 12px;color:var(--mut);font-weight:500;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid #222;vertical-align:middle}
 tr:hover td{background:#ffffff08}
-.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700}
-.badge.red{background:#f033;color:#fff}.badge.green{background:#16a34a;color:#fff}.badge.blue{background:#1d4ed8;color:#fff}.badge.gold{background:#b45309;color:#fff}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap}
+.badge.red{background:#f033;color:#fff}.badge.green{background:#16a34a;color:#fff}.badge.blue{background:#1d4ed8;color:#fff}.badge.gold{background:#b45309;color:#fff}.badge.grey{background:#3d3d3d;color:#ddd}
 input,select{background:#181818;border:1px solid var(--line);color:#fff;padding:10px 14px;border-radius:8px;font-size:14px;font-family:inherit;outline:none}
 input:focus{border-color:var(--blue)}
 .btn{background:var(--bg3);border:1px solid var(--line);color:#fff;padding:10px 18px;border-radius:8px;font-size:13.5px;font-weight:500;cursor:pointer;font-family:inherit}
@@ -38,50 +54,116 @@ input:focus{border-color:var(--blue)}
 .btn.sm{padding:6px 12px;font-size:12px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .link{color:var(--blue);text-decoration:none;word-break:break-all;font-size:12.5px}
-.link:hover{textunderline}
-.empty{color:var(--mut);text-align:center;padding:30px;font-size:14px}
-#toast{position:fixed;bottom:26px;left:26px;background:#f1f1f1;color:#000;padding:13px 22px;border-radius:8px;font-size:14px;z-index:400;transform:translateY(80px);transition:.3s}
+.empty{color:var(--mut);text-align:center;padding:28px;font-size:14px}
+/* toggle switch */
+.sw{position:relative;width:46px;height:26px;flex-shrink:0}
+.sw input{opacity:0;width:100%;height:100%;position:absolute;cursor:pointer;margin:0;z-index:2}
+.sw i{position:absolute;inset:0;background:#3d3d3d;border-radius:99px;transition:.2s}
+.sw i:after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:99px;background:#fff;transition:.2s}
+.sw input:checked+i{background:var(--green)}
+.sw input:checked+i:after{left:23px}
+/* chart bars */
+.bars{display:flex;align-items:flex-end;gap:8px;height:150px;padding-top:10px}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.bar .col{width:100%;max-width:44px;background:linear-gradient(180deg,var(--blue),#1d4ed8);border-radius:6px 6px 0 0;min-height:4px}
+.bar small{color:var(--mut);font-size:10.5px}
+#toast{position:fixed;bottom:26px;left:26px;background:#f1f1f1;color:#000;padding:13px 22px;border-radius:8px;font-size:14px;z-index:400;transform:translateY(80px);transition:.3s;max-width:90vw}
 #toast.show{transform:none}
 #lockBox{position:fixed;inset:0;background:#0f0f0f;z-index:500;display:flex;align-items:center;justify-content:center;padding:16px}
 #lockBox .box{background:var(--bg3);border:1px solid var(--line);border-radius:16px;padding:28px;width:min(380px,94vw);text-align:center}
+@media(max-width:760px){
+.app{flex-direction:column}.side{width:100%;height:auto;position:sticky;top:0;z-index:60;flex-direction:row;align-items:center;overflow-x:auto;padding:10px}
+.brand{padding:0 8px 0 0}.brand small,.brand span.t{display:none}
+.nav{display:flex;gap:2px}.nav button{width:auto;white-space:nowrap;padding:9px 12px}.nav button .lbl{display:none}
+.side .foot{margin:0 0 0 auto;border:0;padding:0;flex-direction:row}
+.main{padding:0 14px 60px}
+}
 </style>
 </head>
 <body>
 <div id="lockBox"><div class="box">
 <div style="font-size:44px">🔐</div>
-<h2 style="margin:10px 0 4px">Admin Login</h2>
-<p style="color:var(--mut);font-size:13px;margin-bottom:14px">Cholche TV Control Panel</p>
+<h2 style="margin:10px 0 4px">Cholche Studio</h2>
+<p style="color:var(--mut);font-size:13px;margin-bottom:14px">Admin Control Panel</p>
 <input id="admE" type="email" placeholder="Admin email" style="width:100%;margin-bottom:10px">
 <input id="admP" type="password" placeholder="Password" style="width:100%;margin-bottom:12px" onkeydown="if(event.key==='Enter')doLogin()">
 <button class="btn pri" style="width:100%" onclick="doLogin()">Login →</button>
 <p id="lockErr" style="color:#f87171;font-size:13px;margin-top:10px;display:none">ভুল email বা password!</p>
 </div></div>
-<header class="mast">
-<div class="yt-logo" onclick="location.href='index.html'"><img src="logo.png" alt="">Cholche TV</div>
-<div style="width:1px;height:28px;background:var(--line)"></div>
-<div class="tab on" data-t="dash" onclick="tab('dash',this)">📊 Dashboard</div>
-<div class="tab" data-t="pls" onclick="tab('pls',this)">🎬 Playlists</div>
-<div class="tab" data-t="ads" onclick="tab('ads',this)">💰 Ad Links</div>
-<div class="tab" data-t="reports" onclick="tab('reports',this)">⚠ Reports</div>
-<div class="tab" data-t="broken" onclick="tab('broken',this)">💔 Broken</div>
-<div class="tab" data-t="stats" onclick="tab('stats',this)">📈 Stats</div>
-<div style="margin-left:auto"></div>
-<button class="btn sm" onclick="doLogout()">Logout</button>
-</header>
-<div class="wrap">
-<div id="view-dash"><div class="cards" id="statCards"></div><div class="sec"><h2>🕐 Recent activity</h2><div id="recent"></div></div></div>
-<div id="view-pls" style="display:none"><div class="sec"><h2>🎬 Playlist Sources</h2>
-<p style="color:var(--mut);font-size:13px;margin-bottom:12px">Website প্রতি 2 min-এ auto-sync করে — restart লাগে না। Source 1 = default server।</p>
-<div class="row" style="margin-bottom:14px"><input id="newPl" placeholder="https://…m3u / .m3u8" style="flex:1;min-width:200px"><button class="btn pri" onclick="addPl()">+ Add</button></div>
-<div id="plList"></div></div></div>
-<div id="view-ads" style="display:none"><div class="sec"><h2>💰 Ad Links</h2>
-<div class="row" style="margin-bottom:14px"><input id="newAd" placeholder="https://…" style="flex:1;min-width:200px"><button class="btn pri" onclick="addAd()">+ Add</button></div>
-<div id="adList"></div></div></div>
-<div id="view-reports" style="display:none"><div class="sec"><h2>⚠ Channel Reports (user পাঠানো)</h2><div id="repList"></div></div></div>
-<div id="view-broken" style="display:none"><div class="sec"><h2>💔 Broken Channels (auto)</h2>
-<p style="color:var(--mut);font-size:13px;margin-bottom:12px" id="brokenMeta">Channel play fail হলে নামসহ auto list হবে।</p>
-<div id="brokenList"><div class="empty">Loading…</div></div></div></div>
-<div id="view-stats" style="display:none"><div class="sec"><h2>📈 Most watched</h2><div id="watchList"></div></div></div>
+<div class="app">
+<aside class="side">
+<div class="brand" onclick="location.href='index.html'"><img src="logo.png" alt=""><span class="t">Cholche<small>STUDIO</small></span></div>
+<nav class="nav">
+<button class="on" onclick="page('overview',this)"><span class="ic">📊</span><span class="lbl">Overview</span></button>
+<button onclick="page('channels',this)"><span class="ic">📺</span><span class="lbl">Channels</span></button>
+<button onclick="page('pls',this)"><span class="ic">🎬</span><span class="lbl">Playlists</span></button>
+<button onclick="page('ads',this)"><span class="ic">💰</span><span class="lbl">Ads</span></button>
+<button onclick="page('mod',this)"><span class="ic">⚠</span><span class="lbl">Moderation</span><span class="nbadge" id="modBadge" style="display:none"></span></button>
+<button onclick="page('stats',this)"><span class="ic">📈</span><span class="lbl">Analytics</span></button>
+<button onclick="page('settings',this)"><span class="ic">⚙</span><span class="lbl">Settings</span></button>
+</nav>
+<div class="foot">
+<button class="btn sm" style="border:0;color:var(--mut)" onclick="location.href='index.html'">🌐 View site</button>
+<button class="btn sm" style="border:0;color:var(--mut)" onclick="doLogout()">⏻ Logout</button>
+</div>
+</aside>
+<div class="main">
+<div class="topbar"><h1 id="pageTitle">📊 Overview</h1><div class="live-dot"><i></i>System operational</div></div>
+
+<!-- OVERVIEW -->
+<div id="pg-overview">
+<div class="cards" id="ovCards"></div>
+<div class="grid2">
+<div class="sec"><h2>🚨 Needs attention</h2><div class="sub">Latest broken + user reports</div><div id="ovIssues"><div class="empty">Loading…</div></div></div>
+<div class="sec"><h2>🔥 Top channels</h2><div class="sub">Most watched</div><div id="ovTop"><div class="empty">Loading…</div></div></div>
+</div>
+<div class="sec"><h2>🕐 Recent activity</h2><div class="sub">Latest plays, opens & reports</div><div class="tblwrap" id="ovRecent"><div class="empty">Loading…</div></div></div>
+</div>
+
+<!-- CHANNELS -->
+<div id="pg-channels" style="display:none">
+<div class="sec"><h2>📺 All Channels</h2><div class="sub" id="chMeta">Loading…</div>
+<div class="row" style="margin-bottom:12px"><input id="chQ" placeholder="🔍 Search channel…" style="flex:1;min-width:180px" oninput="paintChannels()"><select id="chSrc" onchange="paintChannels()"><option value="">All sources</option><option value="1">Source 1</option><option value="2">Source 2</option><option value="3">Source 3</option><option value="4">Source 4</option></select></div>
+<div class="tblwrap" id="chList"><div class="empty">Loading…</div></div></div>
+</div>
+
+<!-- PLAYLISTS -->
+<div id="pg-pls" style="display:none">
+<div class="sec"><h2>🎬 Playlist Sources</h2><div class="sub">Website প্রতি 2 min-এ auto-sync করে — restart লাগে না। Source 1 = default server।</div>
+<div class="row" style="margin-bottom:14px"><input id="newPl" placeholder="https://…m3u / .m3u8" style="flex:1;min-width:200px"><button class="btn pri" onclick="addPl()">+ Add source</button></div>
+<div class="tblwrap" id="plList"></div></div>
+</div>
+
+<!-- ADS -->
+<div id="pg-ads" style="display:none">
+<div class="sec"><h2>💰 Advertisements</h2><div class="sub">Preroll, banner & sponsored cards — সব page-এ auto-apply হয়</div>
+<div class="row" style="margin-bottom:14px;background:#181818;border:1px solid var(--line);border-radius:10px;padding:12px 14px"><label class="sw"><input type="checkbox" id="adsTgl" checked onchange="setAds(this.checked)"><i></i></label><div><b>Ads enabled</b><div style="color:var(--mut);font-size:12px">OFF করলে site-এর সব ads লুকিয়ে যাবে</div></div></div>
+<div class="row" style="margin-bottom:14px"><input id="newAd" placeholder="https://… ad link" style="flex:1;min-width:200px"><button class="btn pri" onclick="addAd()">+ Add link</button></div>
+<div class="tblwrap" id="adList"></div></div>
+</div>
+
+<!-- MODERATION -->
+<div id="pg-mod" style="display:none">
+<div class="sec"><h2>💔 Broken Channels <span class="badge red" id="brokenCount"></span></h2><div class="sub">Play fail হলে নামসহ auto আসে</div><div class="tblwrap" id="brokenList"><div class="empty">Loading…</div></div></div>
+<div class="sec"><h2>⚠ User Reports <span class="badge gold" id="repCount"></span></h2><div class="sub">দর্শকদের পাঠানো report</div><div class="tblwrap" id="repList"><div class="empty">Loading…</div></div></div>
+</div>
+
+<!-- ANALYTICS -->
+<div id="pg-stats" style="display:none">
+<div class="sec"><h2>📈 Last 7 days activity</h2><div class="sub">Plays + opens per day</div><div class="bars" id="dayChart"><div class="empty">Loading…</div></div></div>
+<div class="sec"><h2>🏆 Most watched channels</h2><div class="tblwrap" id="watchList"><div class="empty">Loading…</div></div></div>
+</div>
+
+<!-- SETTINGS -->
+<div id="pg-settings" style="display:none">
+<div class="sec"><h2>⚙ Settings</h2><div class="sub">Site behavior control</div>
+<div class="row" style="margin-bottom:12px;background:#181818;border:1px solid var(--line);border-radius:10px;padding:12px 14px"><label class="sw"><input type="checkbox" id="adsTgl2" checked onchange="setAds(this.checked)"><i></i></label><div><b>Ads enabled</b><div style="color:var(--mut);font-size:12px">Master switch — OFF = ad-free site</div></div></div>
+<div class="row" style="margin-bottom:12px"><button class="btn" onclick="location.href='index.html'">🌐 View site</button><button class="btn danger" onclick="if(confirm('Recent activity clear করবো?'))db.ref('cholchetv/activity').remove().then(()=>toast('Cleared'))">🗑 Clear activity log</button></div>
+<p style="color:var(--mut);font-size:12.5px">Logged in as <b>mdswampodsarkar@gmail.com</b> • Cholche Studio v2</p>
+</div>
+</div>
+
+</div>
 </div>
 <div id="toast"></div>
 <script>
@@ -89,29 +171,46 @@ const DB_URL="https://fram-and-go-default-rtdb.asia-southeast1.firebasedatabase.
 firebase.initializeApp({databaseURL:DB_URL});
 const db=firebase.database();
 let toastT=null;const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)};
-/* ===== admin gate (basic screen — page source-এ visible, Firebase Auth লাগলে বলো) ===== */
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+/* ===== gate ===== */
 const _AE='mdswa'+'mpodsarkar@'+'gmail.com',_AP='123'+'456';
 function isAuthed(){try{return sessionStorage.getItem('cholche_admin')==='1'}catch(e){return false}}
-function doLogin(){const e=document.getElementById('admE').value.trim().toLowerCase(),p=document.getElementById('admP').value;if(e===_AE&&p===_AP){try{sessionStorage.setItem('cholche_admin','1')}catch(x){}document.getElementById('lockBox').style.display='none';document.getElementById('lockErr').style.display='none';loadDash();toast('✅ Welcome back!')}else{document.getElementById('lockErr').style.display='block'}}
+function doLogin(){const e=document.getElementById('admE').value.trim().toLowerCase(),p=document.getElementById('admP').value;if(e===_AE&&p===_AP){try{sessionStorage.setItem('cholche_admin','1')}catch(x){}document.getElementById('lockBox').style.display='none';document.getElementById('lockErr').style.display='none';page('overview',document.querySelector('.nav button'));toast('✅ Welcome back!')}else{document.getElementById('lockErr').style.display='block'}}
 function doLogout(){try{sessionStorage.removeItem('cholche_admin')}catch(e){}location.reload()}
-function tab(t,el){document.querySelectorAll('.mast .tab').forEach(x=>x.classList.remove('on'));el.classList.add('on');['dash','pls','ads','reports','broken','stats'].forEach(v=>document.getElementById('view-'+v).style.display=v===t?'':'none');if(t==='ads')loadAds();if(t==='reports')loadReps();if(t==='broken')loadBroken(false);if(t==='stats')loadStats();if(t==='dash')loadDash();if(t==='pls')loadPls()}
-/* playlists: add/remove -> Firebase -> website auto-sync (2 min) */
-function loadPls(){db.ref('cholchetv/playlists').once('value').then(s=>{const v=s.val()||[];document.getElementById('plList').innerHTML=v.length?`<table><tr><th>#</th><th>Source URL</th><th></th></tr>${v.map((u,i)=>`<tr><td style="color:var(--mut)">S${i+1}</td><td><span class="link">${String(u).slice(0,70)}…</span></td><td><button class="btn sm danger" onclick="delPl(${i})">✕</button></td></tr>`).join('')}</table>`:'<div class="empty">No sources yet</div>'}).catch(()=>toast('Failed'))}
-function addPl(){const u=document.getElementById('newPl').value.trim();if(!u||!u.startsWith('http')){toast('Valid URL দাও');return}db.ref('cholchetv/playlists').once('value').then(s=>{const v=s.val()||[];if(v.includes(u)){toast('Already added');return}v.push(u);db.ref('cholchetv/playlists').set(v).then(()=>{document.getElementById('newPl').value='';loadPls();toast('✅ Added — 2 min-এ site-এ আসবে')})}).catch(()=>toast('Failed'))}
-function delPl(i){if(!confirm('Source '+(i+1)+' remove করবো?'))return;db.ref('cholchetv/playlists').once('value').then(s=>{const v=s.val()||[];v.splice(i,1);db.ref('cholchetv/playlists').set(v).then(()=>{loadPls();toast('Removed')})}).catch(()=>toast('Failed'))}
-/* dashboard */
-function loadDash(){db.ref('cholchetv/stats').once('value').then(s=>{const v=s.val()||{};document.getElementById('statCards').innerHTML=[['Total Views',v.views||0,''],['Unique Channels',v.channels||0,''],['Reports',v.reports||0,''],['Ad Clicks',v.adClicks||0,'']].map(([l,n])=>`<div class="card"><b>${n}</b><span>${l}</span></div>`).join('')}).catch(()=>{});db.ref('cholchetv/activity').limitToLast(10).once('value').then(s=>{const v=s.val()||{};const rows=Object.values(v).reverse();document.getElementById('recent').innerHTML=rows.length?`<table><tr><th>Time</th><th>Event</th><th>Channel</th></tr>${rows.map(r=>`<tr><td style="color:var(--mut)">${new Date(r.t).toLocaleString()}</td><td>${r.type}</td><td>${r.ch||'-'}</td></tr>`).join('')}</table>`:'<div class="empty">No activity yet</div>'}).catch(()=>{})}
-/* ads */
-function loadAds(){db.ref('cholchetv/adLinks').once('value').then(s=>{const raw=s.val();const v=raw?(Array.isArray(raw)?raw:Object.values(raw)):[];document.getElementById('adList').innerHTML=v.length?`<table><tr><th>#</th><th>Link</th><th>Clicks</th><th></th></tr>${v.map((a,i)=>`<tr><td>${i+1}</td><td><a class="link" href="${a.url}" target="_blank">${String(a.url).slice(0,60)}…</a></td><td>${a.clicks||0}</td><td><button class="btn sm danger" onclick="delAd(${i})">✕</button></td></tr>`).join('')}</table>`:'<div class="empty">No ad links yet</div>'}).catch(()=>{})}
-function addAd(){const u=document.getElementById('newAd').value.trim();if(!u||!u.startsWith('http')){toast('Valid URL দাও');return}db.ref('cholchetv/adLinks').push({url:u,clicks:0}).then(()=>{document.getElementById('newAd').value='';loadAds();toast('✅ Ad link added')}).catch(()=>toast('Failed'))}
-function delAd(i){db.ref('cholchetv/adLinks').once('value').then(s=>{const v=s.val()||[];const k=Object.keys(s.val()||{})[i];if(k)db.ref('cholchetv/adLinks/'+k).remove().then(()=>{loadAds();toast('Removed')})}).catch(()=>{})}
-/* broken channels: play-fail auto report (নামসহ) + user reports */
-function loadBroken(){db.ref('cholchetv/broken').once('value').then(s=>{const v=s.val()||{};const rows=Object.entries(v).reverse();document.getElementById('brokenMeta').textContent=rows.length?rows.length+' broken channel — play fail হলে auto এসেছে':'🎉 সব channel ঠিক আছে!';document.getElementById('brokenList').innerHTML=rows.length?`<table><tr><th>Time</th><th>Channel</th><th>Reason</th><th></th></tr>${rows.map(([k,r])=>`<tr><td style="color:var(--mut)">${r.t?new Date(r.t).toLocaleString():'-'}</td><td>${r.ch||'-'}</td><td><span class="badge red">${r.reason||'play failed'}</span></td><td><button class="btn sm danger" onclick="resolveBroken('${k}')">✓</button></td></tr>`).join('')}</table>`:'<div class="empty">🎉 সব channel ঠিক আছে!</div>'}).catch(()=>{document.getElementById('brokenList').innerHTML='<div class="empty">Load failed</div>'})}
+/* ===== nav ===== */
+const TITLES={overview:'📊 Overview',channels:'📺 Channels',pls:'🎬 Playlists',ads:'💰 Advertisements',mod:'⚠ Moderation',stats:'📈 Analytics',settings:'⚙ Settings'};
+function page(p,el){document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('on'));if(el)el.classList.add('on');else document.querySelectorAll('.nav button').forEach(x=>{if((x.getAttribute('onclick')||'').indexOf("'"+p+"'")>=0)x.classList.add('on')});Object.keys(TITLES).forEach(v=>document.getElementById('pg-'+v).style.display=v===p?'':'none');document.getElementById('pageTitle').textContent=TITLES[p]||'';if(p==='overview')loadOverview();if(p==='channels')loadChannels();if(p==='pls')loadPls();if(p==='ads')loadAds();if(p==='mod'){loadReps();loadBroken()}if(p==='stats')loadStats();if(p==='settings')loadSettings()}
+/* ===== channels data (shared) ===== */
+let CH=[];
+async function getSources(){try{const r=await fetch('/api/sources');const j=await r.json();if(j&&j.sources&&j.sources.length)return j.sources.map(s=>'/api/playlist?source='+s)}catch(e){}return['/api/playlist?source=1','/api/playlist?source=2']}
+function pParse(t){const L=t.split('\n');let out=[],c=null;for(let l of L){l=l.trim();if(l.indexOf('#EXTINF')===0){c={name:l.split(',').pop().trim()}}else if(l&&l[0]!=='#'){if(c){c.url=l;out.push(c);c=null}}}return out.filter(x=>x.url&&x.url.indexOf('http')===0)}
+async function ensureChannels(){if(CH.length)return CH;const PLS=await getSources();const rs=await Promise.all(PLS.map(u=>fetch(u+'&_='+Date.now()).then(r=>r.text()).catch(()=>' ')));const map=new Map();rs.forEach((t,si)=>pParse(t).forEach(c=>{const k=(c.name||'').trim().toLowerCase()||c.url;if(!map.has(k))map.set(k,{name:c.name,url:c.url,src:[si+1]});else{const e=map.get(k);if(!e.src.includes(si+1))e.src.push(si+1)}}));CH=[...map.values()];return CH}
+/* ===== overview ===== */
+async function loadOverview(){try{const [st,act,brk,rep,top]=await Promise.all([db.ref('cholchetv/stats').once('value').then(s=>s.val()||{}).catch(()=>({})),db.ref('cholchetv/activity').limitToLast(60).once('value').then(s=>s.val()||{}).catch(()=>({})),db.ref('cholchetv/broken').once('value').then(s=>s.val()||{}).catch(()=>({})),db.ref('cholchetv/reports').once('value').then(s=>s.val()||{}).catch(()=>({})),db.ref('cholchetv/watchStats').once('value').then(s=>s.val()||{}).catch(()=>({}))]);await ensureChannels().catch(()=>{});const issues=Object.keys(brk).length+Object.keys(rep).length;document.getElementById('ovCards').innerHTML=[['👁',st.views||0,'Total views',"page('stats')"],['📺',CH.length,'Live channels',"page('channels')"],['🚨',issues,'Open issues',"page('mod')"],['💔',Object.keys(brk).length,'Broken',"page('mod')"],['💰',st.adClicks||0,'Ad clicks',"page('ads')"]].map(([e,n,l,go])=>`<div class="card" onclick="${go}"><b>${n}</b><span>${e} ${l}</span></div>`).join('');const bR=Object.entries(brk).slice(-3).reverse(),rR=Object.entries(rep).slice(-3).reverse();document.getElementById('ovIssues').innerHTML=(bR.length||rR.length)?bR.map(([k,r])=>`<div class="row" style="padding:8px 0;border-bottom:1px solid #222"><span class="badge red">BROKEN</span><b style="flex:1">${esc(r.ch)}</b><button class="btn sm" onclick="resolveBroken('${k}');setTimeout(loadOverview,800)">✓</button></div>`).join('')+rR.map(([k,r])=>`<div class="row" style="padding:8px 0;border-bottom:1px solid #222"><span class="badge gold">REPORT</span><b style="flex:1">${esc(r.ch)}</b><small style="color:var(--mut)">${esc(r.reason||'')}</small></div>`).join(''):'<div class="empty">🎉 সব ঠিক আছে!</div>';const tops=Object.entries(top).sort((a,b)=>(b[1].count||0)-(a[1].count||0)).slice(0,5);document.getElementById('ovTop').innerHTML=tops.length?tops.map(([k,r],i)=>`<div class="row" style="padding:8px 0;border-bottom:1px solid #222"><span style="color:var(--mut);width:22px">${i+1}</span><b style="flex:1">${esc(r.name||k)}</b><span class="badge blue">${r.count||0} views</span></div>`).join(''):'<div class="empty">No watch data yet</div>';const rows=Object.values(act).reverse().slice(0,8);document.getElementById('ovRecent').innerHTML=rows.length?`<table><tr><th>Time</th><th>Event</th><th>Channel</th></tr>${rows.map(r=>`<tr><td style="color:var(--mut);white-space:nowrap">${r.t?new Date(r.t).toLocaleString():'-'}</td><td><span class="badge ${r.type==='report'?'gold':r.type==='broken'?'red':'grey'}">${esc(r.type||'-')}</span></td><td>${esc(r.ch||'-')}</td></tr>`).join('')}</table>`:'<div class="empty">No activity yet</div>';refreshBadge()}catch(e){}}
+function refreshBadge(){Promise.all([db.ref('cholchetv/reports').once('value').then(s=>s.val()).catch(()=>null),db.ref('cholchetv/broken').once('value').then(s=>s.val()).catch(()=>null)]).then(([r,b])=>{const n=(r?Object.keys(r).length:0)+(b?Object.keys(b).length:0);const el=document.getElementById('modBadge');el.style.display=n?'grid':'none';el.textContent=n>99?'99+':n}).catch(()=>{})}
+/* ===== channels page ===== */
+let brokenSet=new Set(),repSet=new Set();
+async function loadChannels(){document.getElementById('chList').innerHTML='<div class="empty">Loading…</div>';try{await ensureChannels();const [b,r]=await Promise.all([db.ref('cholchetv/broken').once('value').then(s=>s.val()||{}).catch(()=>({})),db.ref('cholchetv/reports').once('value').then(s=>s.val()||{}).catch(()=>({}))]);brokenSet=new Set(Object.values(b).map(x=>String(x.ch||'').toLowerCase()));repSet=new Set(Object.values(r).map(x=>String(x.ch||'').toLowerCase()));paintChannels()}catch(e){document.getElementById('chList').innerHTML='<div class="empty">Load failed</div>'}}
+function paintChannels(){const q=(document.getElementById('chQ').value||'').toLowerCase(),sf=document.getElementById('chSrc').value;const list=CH.filter(c=>(!q||(c.name||'').toLowerCase().includes(q))&&(!sf||c.src.includes(+sf)));document.getElementById('chMeta').textContent=list.length+' / '+CH.length+' channels';const cap=list.slice(0,200);document.getElementById('chList').innerHTML=`<table><tr><th>#</th><th>Channel</th><th>Source</th><th>Status</th><th></th></tr>${cap.map((c,i)=>{const n=(c.name||'').toLowerCase(),st=brokenSet.has(n)?'<span class="badge red">BROKEN</span>':repSet.has(n)?'<span class="badge gold">REPORTED</span>':'<span class="badge green">LIVE</span>';return`<tr><td style="color:var(--mut)">${i+1}</td><td><b>${esc(c.name)}</b></td><td>${c.src.map(s=>`<span class="badge blue">S${s}</span>`).join(' ')}</td><td>${st}</td><td>${brokenSet.has(n)?'':`<button class="btn sm" onclick="markBroken(${JSON.stringify(c.name)},${JSON.stringify(c.url)})">⚠ Mark broken</button>`}</td></tr>`}).join('')}</table>`+(list.length>200?`<div class="empty">…+${list.length-200} more — search করে filter করো</div>`:'')}
+function markBroken(n,u){if(!confirm(n+' — broken mark করবো?'))return;db.ref('cholchetv/broken').push({ch:n,url:u||'',reason:'admin: marked broken',t:Date.now()}).then(()=>{toast('Marked broken');loadChannels();refreshBadge()}).catch(()=>toast('Failed'))}
+/* ===== playlists ===== */
+function loadPls(){db.ref('cholchetv/playlists').once('value').then(s=>{const v=s.val()||[];document.getElementById('plList').innerHTML=v.length?`<table><tr><th>#</th><th>Source URL</th><th></th></tr>${v.map((u,i)=>`<tr><td style="color:var(--mut)">S${i+1}</td><td><span class="link">${esc(String(u)).slice(0,70)}…</span></td><td><button class="btn sm danger" onclick="delPl(${i})">✕ Remove</button></td></tr>`).join('')}</table>`:'<div class="empty">No sources yet</div>'}).catch(()=>toast('Failed'))}
+function addPl(){const u=document.getElementById('newPl').value.trim();if(!u||!u.startsWith('http')){toast('Valid URL দাও');return}db.ref('cholchetv/playlists').once('value').then(s=>{const v=s.val()||[];if(v.includes(u)){toast('Already added');return}v.push(u);db.ref('cholchetv/playlists').set(v).then(()=>{document.getElementById('newPl').value='';loadPls();CH=[];toast('✅ Added — 2 min-এ site-এ আসবে')})}).catch(()=>toast('Failed'))}
+function delPl(i){if(!confirm('Source '+(i+1)+' remove করবো?'))return;db.ref('cholchetv/playlists').once('value').then(s=>{const v=s.val()||[];v.splice(i,1);db.ref('cholchetv/playlists').set(v).then(()=>{loadPls();CH=[];toast('Removed')})}).catch(()=>toast('Failed'))}
+/* ===== ads ===== */
+function setAds(on){db.ref('cholchetv/settings/adsEnabled').set(!!on).then(()=>toast(on?'✅ Ads ON':'🚫 Ads OFF — site ad-free')).catch(()=>toast('Failed'))}
+function loadAds(){db.ref('cholchetv/settings/adsEnabled').once('value').then(s=>{const on=s.val()!==false;document.getElementById('adsTgl').checked=on;const t2=document.getElementById('adsTgl2');if(t2)t2.checked=on}).catch(()=>{});db.ref('cholchetv/adLinks').once('value').then(s=>{const raw=s.val();const v=raw?(Array.isArray(raw)?raw:Object.values(raw)):[];document.getElementById('adList').innerHTML=v.length?`<table><tr><th>#</th><th>Link</th><th>Clicks</th><th></th></tr>${v.map((a,i)=>`<tr><td>${i+1}</td><td><a class="link" href="${esc(a.url)}" target="_blank">${esc(String(a.url)).slice(0,60)}…</a></td><td>${a.clicks||0}</td><td><button class="btn sm danger" onclick="delAd(${i})">✕</button></td></tr>`).join('')}</table>`:'<div class="empty">No ad links yet</div>'}).catch(()=>{})}
+function addAd(){const u=document.getElementById('newAd').value.trim();if(!u||!u.startsWith('http')){toast('Valid URL দাও');return}db.ref('cholchetv/adLinks').push({url:u,clicks:0}).then(()=>{document.getElementById('newAd').value='';loadAds();toast('✅ Ad link added — site-এ auto-apply')}).catch(()=>toast('Failed'))}
+function delAd(i){db.ref('cholchetv/adLinks').once('value').then(s=>{const k=Object.keys(s.val()||{})[i];if(k)db.ref('cholchetv/adLinks/'+k).remove().then(()=>{loadAds();toast('Removed')})}).catch(()=>{})}
+/* ===== moderation ===== */
+function loadBroken(){db.ref('cholchetv/broken').once('value').then(s=>{const v=s.val()||{};const rows=Object.entries(v).reverse();document.getElementById('brokenCount').textContent=rows.length||'';document.getElementById('brokenList').innerHTML=rows.length?`<table><tr><th>Time</th><th>Channel</th><th>Reason</th><th></th></tr>${rows.map(([k,r])=>`<tr><td style="color:var(--mut);white-space:nowrap">${r.t?new Date(r.t).toLocaleString():'-'}</td><td><b>${esc(r.ch||'-')}</b></td><td><span class="badge red">${esc(r.reason||'play failed')}</span></td><td><button class="btn sm danger" onclick="resolveBroken('${k}')">✓ Fixed</button></td></tr>`).join('')}</table>`:'<div class="empty">🎉 সব channel ঠিক আছে!</div>';refreshBadge()}).catch(()=>{document.getElementById('brokenList').innerHTML='<div class="empty">Load failed</div>'})}
 function resolveBroken(k){db.ref('cholchetv/broken/'+k).remove().then(()=>{loadBroken();toast('Resolved ✓')}).catch(()=>toast('Failed'))}
-function loadReps(){db.ref('cholchetv/reports').once('value').then(s=>{const v=s.val()||{};const rows=Object.values(v);document.getElementById('repList').innerHTML=rows.length?`<table><tr><th>Time</th><th>Channel</th><th>Reason</th><th></th></tr>${rows.reverse().map((r,i)=>`<tr><td style="color:var(--mut)">${new Date(r.t).toLocaleString()}</td><td>${r.ch}</td><td><span class="badge gold">${r.reason}</span></td><td><button class="btn sm danger" onclick="resolveRep(${i})">✓</button></td></tr>`).join('')}</table>`:'<div class="empty">No reports — সব channel ঠিক আছে!</div>'}).catch(()=>{})}
-function resolveRep(i){db.ref('cholchetv/reports').once('value').then(s=>{const k=Object.keys(s.val()||{})[i];if(k)db.ref('cholchetv/reports/'+k).remove().then(()=>{loadReps();toast('Resolved ✓')})}).catch(()=>{})}
-/* stats */
-function loadStats(){db.ref('cholchetv/watchStats').once('value').then(s=>{const v=s.val()||{};const rows=Object.entries(v).sort((a,b)=>(b[1].count||0)-(a[1].count||0)).slice(0,30);document.getElementById('watchList').innerHTML=rows.length?`<table><tr><th>#</th><th>Channel</th><th>Views</th><th>Last</th></tr>${rows.map(([k,r],i)=>`<tr><td style="color:var(--mut)">${i+1}</td><td>${r.name||k}</td><td><span class="badge blue">${r.count||0}</span></td><td style="color:var(--mut)">${r.last?new Date(r.last).toLocaleString():'-'}</td></tr>`).join('')}</table>`:'<div class="empty">No watch data yet</div>'}).catch(()=>{})}
-if(isAuthed()){document.getElementById('lockBox').style.display='none';loadDash();}
+function loadReps(){db.ref('cholchetv/reports').once('value').then(s=>{const v=s.val()||{};const rows=Object.entries(v).reverse();document.getElementById('repCount').textContent=rows.length||'';document.getElementById('repList').innerHTML=rows.length?`<table><tr><th>Time</th><th>Channel</th><th>Reason</th><th></th></tr>${rows.map(([k,r])=>`<tr><td style="color:var(--mut);white-space:nowrap">${r.t?new Date(r.t).toLocaleString():'-'}</td><td><b>${esc(r.ch||'-')}</b></td><td><span class="badge gold">${esc(r.reason||'')}</span></td><td><button class="btn sm danger" onclick="resolveRep('${k}')">✓ Done</button></td></tr>`).join('')}</table>`:'<div class="empty">No reports — সব channel ঠিক আছে!</div>';refreshBadge()}).catch(()=>{document.getElementById('repList').innerHTML='<div class="empty">Load failed</div>'})}
+function resolveRep(k){db.ref('cholchetv/reports/'+k).remove().then(()=>{loadReps();toast('Resolved ✓')}).catch(()=>toast('Failed'))}
+/* ===== analytics ===== */
+function loadStats(){db.ref('cholchetv/watchStats').once('value').then(s=>{const v=s.val()||{};const rows=Object.entries(v).sort((a,b)=>(b[1].count||0)-(a[1].count||0)).slice(0,30);document.getElementById('watchList').innerHTML=rows.length?`<table><tr><th>#</th><th>Channel</th><th>Views</th><th>Last</th></tr>${rows.map(([k,r],i)=>`<tr><td style="color:var(--mut)">${i+1}</td><td>${esc(r.name||k)}</td><td><span class="badge blue">${r.count||0}</span></td><td style="color:var(--mut)">${r.last?new Date(r.last).toLocaleString():'-'}</td></tr>`).join('')}</table>`:'<div class="empty">No watch data yet</div>'}).catch(()=>{});db.ref('cholchetv/activity').limitToLast(500).once('value').then(s=>{const v=Object.values(s.val()||{});const days=[],now=new Date();for(let i=6;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);days.push({lbl:(d.getMonth()+1)+'/'+d.getDate(),key:d.toDateString(),n:0})}v.forEach(r=>{if(!r.t)return;const k=new Date(r.t).toDateString();const d=days.find(x=>x.key===k);if(d)d.n++});const mx=Math.max(1,...days.map(d=>d.n));document.getElementById('dayChart').innerHTML=days.map(d=>`<div class="bar" title="${d.n} events"><div class="col" style="height:${Math.round(d.n/mx*110)+4}px"></div><small>${d.lbl}</small></div>`).join('')}).catch(()=>{document.getElementById('dayChart').innerHTML='<div class="empty">Load failed</div>'})}
+/* ===== settings ===== */
+function loadSettings(){db.ref('cholchetv/settings/adsEnabled').once('value').then(s=>{document.getElementById('adsTgl2').checked=s.val()!==false}).catch(()=>{})}
+if(isAuthed()){document.getElementById('lockBox').style.display='none';page('overview',document.querySelector('.nav button'));}
 </script>
 </body></html>

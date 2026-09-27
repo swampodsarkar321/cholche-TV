@@ -141,14 +141,16 @@ let AD_LINKS=["https://omg10.com/4/11270726","https://omg10.com/4/11273647","htt
 const randAd=()=>AD_LINKS[Math.floor(Math.random()*AD_LINKS.length)];
 /* admin panel (Ad Links tab) -> site ads auto-update */
 try{if(db)db.ref('cholchetv/adLinks').once('value').then(s=>{const raw=s.val();const a=raw?(Array.isArray(raw)?raw:Object.values(raw)):[];const u=a.map(x=>typeof x==='string'?x:(x&&x.url)).filter(x=>x&&x.indexOf('http')===0);if(u.length)AD_LINKS=u}).catch(()=>{})}catch(e){}
+/* admin Settings -> ads master switch */
+let ADS_ON=true;try{if(db)db.ref('cholchetv/settings/adsEnabled').once('value').then(s=>{if(s.val()===false){ADS_ON=false;['pvBan','pvSide'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none'})}}).catch(()=>{})}catch(e){}
 document.getElementById('pvBan').onclick=()=>{fbIncr('cholchetv/stats/adClicks');window.open(randAd(),'_blank')};
 document.getElementById('pvSide').onclick=()=>{fbIncr('cholchetv/stats/adClicks');window.open(randAd(),'_blank')};
 /* YouTube-style: overlay ad + 10-min mid-roll */
-function showOverlay(){const o=document.getElementById('pvOver');if(!o)return;o.style.display='flex';clearTimeout(window._ovt);window._ovt=setTimeout(()=>{o.style.display='none'},20000)}
-function armMidroll(){clearInterval(window._midt);clearTimeout(window._ovt2);window._ovt2=setTimeout(showOverlay,8000);window._midt=setInterval(()=>{try{v.pause()}catch(e){}showPreroll(()=>{try{v.play()}catch(e){}})},600000)}
+function showOverlay(){if(typeof ADS_ON!=='undefined'&&!ADS_ON)return;const o=document.getElementById('pvOver');if(!o)return;o.style.display='flex';clearTimeout(window._ovt);window._ovt=setTimeout(()=>{o.style.display='none'},20000)}
+function armMidroll(){if(typeof ADS_ON!=='undefined'&&!ADS_ON)return;clearInterval(window._midt);clearTimeout(window._ovt2);window._ovt2=setTimeout(showOverlay,8000);window._midt=setInterval(()=>{try{v.pause()}catch(e){}showPreroll(()=>{try{v.play()}catch(e){}})},600000)}
 let adTimer=null;
 function pvGo(el){const u=el&&el.dataset&&el.dataset.url;if(!u)return;try{fbIncr('cholchetv/stats/adClicks')}catch(e){}window.open(u,'_blank')}
-function showPreroll(done){const box=document.getElementById('pvPre'),skip=document.getElementById('pvSkip'),cr=document.getElementById('pvCreative'),url=randAd();
+function showPreroll(done){if(typeof ADS_ON!=='undefined'&&!ADS_ON){try{done()}catch(e){}return}const box=document.getElementById('pvPre'),skip=document.getElementById('pvSkip'),cr=document.getElementById('pvCreative'),url=randAd();
 if(!box||!skip||!cr){try{done()}catch(e){}return}
 cr.dataset.url=url;
 box.style.display='block';let n=5;skip.disabled=true;skip.textContent='Skip in 5…';let over=false;const fin=()=>{if(over)return;over=true;clearInterval(adTimer);clearTimeout(window._pvfin);box.style.display='none';done()};skip.onclick=fin;clearTimeout(window._pvfin);window._pvfin=setTimeout(fin,15000);
