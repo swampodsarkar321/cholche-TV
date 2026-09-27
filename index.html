@@ -224,10 +224,12 @@ footer{color:var(--mut);font-size:12px;padding:24px;text-align:center}
 
 <script>
 let PLAYLISTS=["/api/playlist?source=1","/api/playlist?source=2"];
-const AD_LINKS=["https://omg10.com/4/11270726","https://omg10.com/4/11273647","https://omg10.com/4/11270727","https://omg10.com/4/10664748","https://omg10.com/4/11269225"];
+let AD_LINKS=["https://omg10.com/4/11270726","https://omg10.com/4/11273647","https://omg10.com/4/11270727","https://omg10.com/4/10664748","https://omg10.com/4/11269225"];
 const DB_URL="https://fram-and-go-default-rtdb.asia-southeast1.firebasedatabase.app";
 let db=null;try{if(window.firebase){firebase.initializeApp({databaseURL:DB_URL});db=firebase.database()}}catch(e){}
 function fbPush(path,data){try{db&&db.ref(path).push(data).catch(()=>{})}catch(e){}}
+/* admin panel (Ad Links tab) -> site ads auto-update */
+try{if(db)db.ref('cholchetv/adLinks').once('value').then(s=>{const raw=s.val();const a=raw?(Array.isArray(raw)?raw:Object.values(raw)):[];const u=a.map(x=>typeof x==='string'?x:(x&&x.url)).filter(x=>x&&x.indexOf('http')===0);if(u.length)AD_LINKS=u}).catch(()=>{})}catch(e){}
 let all=[],filtered=[],idx=0,activeCat="All",view="home",hls=null,srv=0,liked=new Set();
 const favs=new Set(JSON.parse(localStorage.getItem('fav')||'[]'));
 setInterval(()=>{const vws=document.querySelectorAll('.vw');vws.forEach(e=>e.textContent=(Math.random()*40+2).toFixed(1)+'K')},4e3);
